@@ -57,7 +57,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s1',SRV_URL='wss://OTBOY_SERVER_HOST';
+const SRV=typeof __SRV!=='undefined',VER='s1',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -1379,7 +1379,7 @@ function srvConnect(onOpen,onFail){const t0=performance.now();let tries=0;srvWak
   ws.onclose=()=>{if(NET.ws===ws)NET.ws=null;if(!opened){if(performance.now()-t0>110000)return onFail();if(tries>1&&!NET.live)lobbyMsg('Будим сервер… это может занять до минуты');setTimeout(attempt,tries<3?800:3000);}
    else if(NET.srv&&NET.code){lobbyMsg('Связь с сервером пропала — подключаемся заново…');setTimeout(()=>srvConnect(()=>netSend({t:'join',v:VER,code:NET.code,slot:NET.slot}),()=>lobbyMsg('Сервер недоступен. Попробуй позже.')),1000);}};})();}
 function srvJoin(code){initAudio();sfx('uiclick');if(NET.ws){try{const w=NET.ws;NET.ws=null;NET.code='';w.close();}catch(e){}}NET.role='guest';NET.srv=true;NET.live=false;NET.code='';lobbyMsg('Подключаемся к серверу…');
- srvConnect(()=>{netSend(code?{t:'join',v:VER,code}:{t:'join',v:VER,create:1});},()=>{NET.role=null;NET.srv=false;lobbyMsg('Сервер недоступен. Попробуй позже.');});}
+ srvConnect(()=>{netSend(code?{t:'join',v:VER,code}:{t:'join',v:VER,create:1});},()=>{NET.role=null;NET.srv=false;lobbyMsg('Сервер недоступен. По сети игра работает только по отдельной ссылке, не внутри Claude. Если ты по ссылке — попробуй позже.');});}
 setInterval(()=>{if(NET.srv&&NET.ws)srvWake();},240000);
 if(!SRV){if(location.hash.indexOf('bc')>=0){$('mpHost').onclick=mpHost;$('mpJoin').onclick=mpJoin;}
  else{$('mpHost').onclick=()=>srvJoin(null);$('mpJoin').onclick=()=>{const code=($('mpCode').value||'').trim();if(code.length<4){lobbyMsg('Введи код из 4 цифр');return;}srvJoin(code);};}}
