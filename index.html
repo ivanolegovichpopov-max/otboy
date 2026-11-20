@@ -217,7 +217,7 @@ function N(type,f,q,t,a,d,vol,dest,f2){const s=AC.createBufferSource();s.buffer=
 function mbox(f,t,vol,dest){O('sine',f,t,0.006,1.7,vol,dest);O('sine',f*3.01,t,0.004,0.45,vol*0.15,dest);O('triangle',f*2,t,0.005,0.8,vol*0.1,dest);}
 function brass(f,t,d,vol){const o=AC.createOscillator(),fl=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=f;fl.type='lowpass';fl.frequency.setValueAtTime(250,t);fl.frequency.linearRampToValueAtTime(1300,t+0.12);fl.frequency.linearRampToValueAtTime(600,t+d);env(g,t,0.06,vol,d);o.connect(fl).connect(g).connect(SFX);o.start(t);o.stop(t+d+0.1);}
 const SET=(node,v,tc)=>{if(node)node.gain.setTargetAtTime(v,AC.currentTime,tc||0.3);};
-function sfx(n,v){if(!AC)return;v=v==null?1:v;const t=AC.currentTime+0.01;switch(n){
+function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.currentTime+0.01;switch(n){
  case 'spot':motif(t,110,0.1,0.085,(f,x,vv,d)=>brass(f,x,d+0.08,vv));N('lowpass',180,0.7,t,0.05,1.1,0.28);O('sine',55,t,0.02,1.0,0.25,SFX,40);break;
  case 'gen':N('lowpass',400,0.7,t,0.004,0.2,0.4);O('sine',85,t,0.004,0.3,0.3,SFX,50);[220,261.6,329.6].forEach((f,i)=>mbox(f,t+0.15+i*0.13,0.13));break;
  case 'power':N('lowpass',300,0.7,t,0.004,0.4,0.5);[196,261.6,329.6,392].forEach((f,i)=>brass(f,t+0.3+i*0.32,i===3?1.1:0.3,0.09));break;
@@ -1283,7 +1283,7 @@ puffs=function(x,y,n,a){if(hosting())EVQ.push(['p',Math.round(x),Math.round(y),n
 ring=function(x,y,m,c,d){if(hosting())EVQ.push(['r',Math.round(x),Math.round(y),m,c,d||0]);return L_ring(x,y,m,c,d);};
 fxAdd=function(ty,x,y,n,o){if(hosting()&&ty!=='dust'&&n>3)EVQ.push(['x',ty,Math.round(x),Math.round(y),n,o||0]);return L_fx(ty,x,y,n,o);};
 sfx=function(n,v){if(hosting()&&RELAY_SFX[n])EVQ.push(['s',n,EVP]);return L_sfx(n,v);};
-function playEvents(ev){for(const e of ev){try{switch(e[0]){
+function playEvents(ev){if(document.hidden)return;for(const e of ev){try{switch(e[0]){
  case 'b':L_boom(e[1],e[2],e[3]||undefined);break;case 'f':L_float(e[1],e[2],e[3],e[4],e[5]||undefined);break;
  case 'p':L_puffs(e[1],e[2],e[3],e[4]==null?undefined:e[4]);break;case 'r':L_ring(e[1],e[2],e[3],e[4],e[5]||undefined);break;
  case 'x':L_fx(e[1],e[2],e[3],e[4],e[5]||undefined);break;
@@ -1307,7 +1307,7 @@ function nbPos(e,rt){const b=e.nb;if(!b||!b.length)return;if(rt<=b[0].t){e.x=b[0
    else{const p=b[i-1],ex=Math.min(0.12,rt-a.t);if(p&&a.t>p.t){e.x=a.x+(a.x-p.x)/(a.t-p.t)*ex;e.y=a.y+(a.y-p.y)/(a.t-p.t)*ex;}else{e.x=a.x;e.y=a.y;}}return;}}}
 function nClock(c,ts){const d=performance.now()/1000-ts;if(c.off==null||d<c.off||d-c.off>3){c.off=d;if(c.jit==null)c.jit=0.05;}else c.off+=(d-c.off)*0.004;c.jit=Math.max(c.jit*0.985,d-c.off);}
 function nTime(c,dt){const tg=Math.min(0.45,Math.max(0.14,0.115+c.jit*1.15));c.dly=c.dly==null?tg:c.dly+(tg-c.dly)*Math.min(1,dt*(tg>c.dly?4:0.6));return performance.now()/1000-c.off-c.dly;}
-function netApply(o){if(o.n<=NET.lastSnap)return;NET.lastSnap=o.n;NET.snN=(NET.snN||0)+1;
+function netApply(o){if(o.n<=NET.lastSnap)return;NET.lastSnap=o.n;NET.snAge=0;NET.snN=(NET.snN||0)+1;
  if(o.ts!=null){nClock(NET.cg,o.ts);NET.hasTs=true;}else NET.hasTs=false;const g=o.g;G.time=g[0];G.done=g[1];G.powerOn=!!g[2];if(g[3])G.lightsOn=true;if(g[5]>0||G.intro>0)G.intro=g[5];if(g[4]&&!G.over){G.over=true;later(1300,showEnd);}
  o.S.forEach((d,i)=>{const s=S[i];if(!s)return;const me=s===P,prev=s.state,wasTr=!!s.trapped,act=d.s==='ok'||d.s==='injured';
   s.tx=d.x;s.ty=d.y;s.tf=d.f;s.tl=d.l;
@@ -1329,9 +1329,9 @@ function netApply(o){if(o.n<=NET.lastSnap)return;NET.lastSnap=o.n;NET.snN=(NET.s
  o.bl.forEach((v,i)=>{G.balls[i].taken=!!v;});o.bt.forEach((v,i)=>{G.bats[i].taken=!!v;});o.gt.forEach((v,i)=>{const q=G.gates[i];if(v&&!q.open){q.open=true;q.rect.open=true;}});o.lv.forEach((v,i)=>{G.levers[i].p=v;});
  G.fly=o.fl.map(a=>({x:a[0],y:a[1],t:1,vx:0,vy:0}));G.dropped=o.dp.map(a=>({x:a[0],y:a[1]}));playEvents(o.ev||[]);}
 // --- гость: свой ход считает сам, остальное получает от хоста
-function guestStart(L){initAudio();newGame(L);P.isPlayer=false;P.name='Друг';P=S[1];P.isPlayer=true;P.name='Ты';camX=P.x;camY=P.y;NET.lastSnap=-1;NET.cg={};NET.hasTs=false;NET.live=true;if(NET.hello){clearInterval(NET.hello);NET.hello=null;}
+function guestStart(L){initAudio();newGame(L);P.isPlayer=false;P.name='Друг';P=S[1];P.isPlayer=true;P.name='Ты';camX=P.x;camY=P.y;NET.lastSnap=-1;NET.snAge=0;NET.cg={};NET.hasTs=false;NET.live=true;if(NET.hello){clearInterval(NET.hello);NET.hello=null;}
  $('menu').classList.add('hidden');$('end').classList.add('hidden');running=true;last=0;musicStart();}
-function guestUpdate(dt){G.t+=dt;if(G.intro>0){G.intro-=dt;musicTick();}
+function guestUpdate(dt){G.t+=dt;NET.snAge=(NET.snAge||0)+dt;if(NET.snAge>1.2){for(const s of S){s.act=null;if(s!==P)s.running=false;}G.sc=null;}if(G.intro>0){G.intro-=dt;musicTick();}
  else{if(G.sc){if(G.sc.t<0&&G.sc.t+dt>=0)sfx('tick');G.sc.t+=dt;if(G.sc.t>G.sc.dur){const g=G.sc.g;G.sc=null;scResult('fail',g);G.scRes={t:0.8,ok:0};}}
   if(G.scRes){G.scRes.t-=dt;if(G.scRes.t<=0)G.scRes=null;}
   if(active(P)&&P.act&&P.act.k==='repair'&&P.act.o)scTick(P,P.act.o,dt);
@@ -1356,7 +1356,7 @@ function remoteAct(H,m){if(m.k==='act')doActFor(H);else if(m.k==='burst'){H.burs
 function netRecv(m){if(!m)return;
  if(NET.role==='host'){
   if(m.t==='hello'){NET.peer=true;NET.inAge=0;netSend({t:'welcome'});lobbyMsg('Друг подключился! Жми «Играть»');if(running&&G&&!G.over&&S[1]){S[1].remote=true;S[1].name='Друг';netSend({t:'init',L:layout()});}}
-  else if(m.t==='i'&&G&&S[1]){S[1].net=m;NET.inAge=0;NET.snN=(NET.snN||0)+1;if(m.ts!=null){nClock(NET.ch2,m.ts);if(S[1].fT>0){if(S[1].nb)S[1].nb.length=0;}else nbPush2(S[1],m.ts,m.x,m.y);}}
+  else if(m.t==='i'&&G&&S[1]){S[1].net=m;NET.inAge=0;if(running&&!S[1].remote){S[1].remote=true;S[1].name='Друг';NET.peer=true;S[1].path=null;}NET.snN=(NET.snN||0)+1;if(m.ts!=null){nClock(NET.ch2,m.ts);if(S[1].fT>0){if(S[1].nb)S[1].nb.length=0;}else nbPush2(S[1],m.ts,m.x,m.y);}}
   else if(m.t==='a'&&G&&S[1]&&S[1].remote&&running)remoteAct(S[1],m);}
  else if(NET.role==='guest'){
   if(m.t==='welcome'){if(!NET.peer){NET.peer=true;lobbyMsg('Подключено! Ждём, пока друг нажмёт «Играть»…');}}
@@ -1378,8 +1378,15 @@ function loop(t){requestAnimationFrame(loop);const now=t/1000;const raw=last?now
  if(rumbleT>0){rumbleT-=dt;const a=rumbleA*Math.min(1,rumbleT*6+0.3);cv.style.transform='translate('+((Math.random()-0.5)*2*a).toFixed(1)+'px,'+((Math.random()-0.5)*2*a).toFixed(1)+'px)';if(rumbleT<=0){rumbleA=0;cv.style.transform='';}}if(dmgT>0)dmgT-=dt*1.3;
  draw();
  if(NET.role&&running&&G&&NET.fps){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.font='11px sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillStyle='rgba(255,255,255,0.45)';
+  {const st=NET.role==='guest'?NET.snAge>1.2:(NET.peer&&S[1]&&S[1].remote&&NET.inAge>1.5);if(st&&!G.over){const tx=NET.role==='guest'?'Друг свернул игру или пропала связь — ждём…':'Друг свернул игру или пропала связь';ctx.font='16px Neucha, sans-serif';ctx.textAlign='center';const w=ctx.measureText(tx).width+28;ctx.fillStyle='rgba(20,14,10,0.78)';ctx.fillRect(VW/2-w/2,VH*0.2-16,w,32);ctx.fillStyle='#ffd9a0';ctx.textBaseline='middle';ctx.fillText(tx,VW/2,VH*0.2);ctx.font='11px sans-serif';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillStyle='rgba(255,255,255,0.45)';}}
   ctx.fillText('FPS '+NET.fps+(NET.role==='guest'||NET.peer?' · сеть '+NET.sps+'/с · задержка '+Math.round(((NET.role==='guest'?NET.cg.dly:NET.ch2.dly)||0)*1000)+' мс':'')+(QL<2?' · графика '+(QL?'средняя':'низкая'):''),8,VH-6);}}
 requestAnimationFrame(loop);
+// --- вкладка свёрнута: хост продолжает считать матч, гость даёт знать, что он на связи
+let bgLast=0;
+function bgTick(){if(!document.hidden){bgLast=0;return;}if(!running||!G)return;const now=performance.now()/1000,el=bgLast?Math.min(1.5,now-bgLast):0.04;bgLast=now;
+ try{if(NET.role==='host'&&NET.peer){const n=Math.max(1,Math.round(el/0.04)),d=el/n;for(let i=0;i<n;i++){if(hitStop>0)hitStop-=d;else update(d);}netHostTick(el);}
+  else if(NET.role==='guest'&&NET.live){NET.sendT-=el;if(NET.sendT<=0){NET.sendT=0.25;netSend({t:'i',x:R1(P.x),y:R1(P.y),f:R2(P.face),l:R2(lookOf(P)),r:0,m:0,h:0,v:-1});}}}catch(e){}}
+{let tw=null;try{tw=new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},40)'],{type:'text/javascript'})));tw.onmessage=bgTick;}catch(e){tw=null;}if(!tw)setInterval(bgTick,40);}
 
 function showEnd(){running=false;musicStop();sfx(P.state==='escaped'?'endwin':'endlose');const esc=S.filter(s=>s.state==='escaped').length;
  const pts=Math.round(P.st.rep*100+P.st.res*150+(P.state==='escaped'?500:0)+P.st.dodge*50+P.st.stun*100);
