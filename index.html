@@ -8,7 +8,7 @@
 <style>
 html,body{margin:0;height:100%;background:#05070c;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eee;user-select:none;-webkit-user-select:none}
 canvas{display:block;width:100vw;height:100vh}
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 38%,#1b2232,#05070c 72%);text-align:center;padding:20px;box-sizing:border-box}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(circle at 50% 38%,#1b2232,#05070c 72%);text-align:center;padding:20px;box-sizing:border-box}
 h1{font-family:Neucha,system-ui;font-weight:400;font-size:84px;margin:0;letter-spacing:8px;color:#efe3c4;text-shadow:0 0 28px #b02a1d}
 h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;color:#efe3c4}
 .sub{opacity:.65;margin:6px 0 30px;font-size:15px}
@@ -16,6 +16,14 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 .big:active{transform:scale(.97)}
 .vibb{margin-top:14px;font-family:Neucha,system-ui;font-size:18px;background:none;border:1px dashed rgba(233,220,192,.5);color:#d9ccb0;border-radius:12px;padding:6px 16px;cursor:pointer}
 .mp{margin-top:14px;display:flex;flex-direction:column;gap:8px;align-items:center;font-family:Neucha,system-ui}.mp .vibb{margin-top:0}#mpCode{width:84px;font-family:Neucha,system-ui;font-size:20px;text-align:center;padding:5px;border-radius:10px;border:1px dashed rgba(233,220,192,.5);background:#1a140f;color:#f4ead2}#mpMsg{min-height:22px;font-size:18px;color:#f0cf72;max-width:420px}
+.nickrow{font-size:18px;color:#d9ccb0}#nick{width:150px;font-family:Neucha,system-ui;font-size:19px;text-align:center;padding:5px;border-radius:10px;border:1px dashed rgba(233,220,192,.5);background:#1a140f;color:#f4ead2}
+.screen>:first-child{margin-top:auto}.screen>:last-child{margin-bottom:auto}.inroom .how,.inroom .sub,.inroom #vibb{display:none}
+#mpPre{display:flex;flex-direction:column;gap:8px;align-items:center}
+#lobby{display:flex;flex-direction:column;gap:10px;align-items:center;border:2px dashed rgba(233,220,192,.45);border-radius:16px;padding:14px 18px;background:rgba(26,20,15,.72);min-width:270px}
+.lbTitle{font-size:22px;color:#efe3c4}.lbTitle b{font-size:30px;letter-spacing:4px;color:#f0cf72;margin:0 8px 0 4px}
+#lbList{display:flex;flex-direction:column;gap:4px;width:100%}
+.lbRow{display:flex;align-items:center;gap:10px;font-size:20px;color:#f4ead2;padding:3px 8px;border-bottom:1px dashed rgba(233,220,192,.22);text-align:left}
+.lbRow img{height:40px;width:auto}.lbRow.bot{opacity:.45}.lbRow.me{color:#f0cf72}.lbRow small{font-size:14px;opacity:.7;margin-left:auto}
 .how{font-family:Neucha,system-ui;margin-top:26px;font-size:17px;opacity:.75;line-height:1.75;max-width:440px}
 .tb{margin:14px auto 6px;border-collapse:collapse;font-size:18px}.tb td,.tb th{padding:4px 12px;border-bottom:1px dashed rgba(233,220,192,.3)}.tb th{font-weight:400;color:#bfb29a;font-size:15px}.tb tr.me td{color:#f0cf72}.pts{margin-top:8px}
 .stats{font-family:Neucha,system-ui;font-size:22px;line-height:1.9;margin:6px 0 26px;opacity:.9}
@@ -35,8 +43,16 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
   <h1>ОТБОЙ</h1>
   <div class="sub">прототип · заброшенный пионерлагерь · ты и 3 жертвы-бота против охотника</div>
   <button class="big" id="play">Играть</button>
-  <div class="mp"><button class="vibb" id="mpHost">Играть с другом: создать комнату</button>
-   <div><input id="mpCode" inputmode="numeric" maxlength="4" placeholder="код"> <button class="vibb" id="mpJoin">Войти к другу</button></div>
+  <div class="mp">
+   <div class="nickrow">Ник: <input id="nick" maxlength="12" placeholder="как тебя звать" autocomplete="off"></div>
+   <div id="mpPre"><button class="vibb" id="mpHost">Играть с друзьями: создать комнату</button>
+    <div><input id="mpCode" inputmode="numeric" maxlength="4" placeholder="код"> <button class="vibb" id="mpJoin">Войти в комнату</button></div></div>
+   <div id="lobby" class="hidden">
+    <div class="lbTitle">Комната <b id="lbCode"></b> <button class="vibb" id="lbInv">Пригласить</button></div>
+    <div id="lbList"></div>
+    <div id="lbPlay"></div>
+    <button class="vibb" id="lbLeave">Выйти из комнаты</button>
+   </div>
    <div id="mpMsg"></div></div>
   <button class="vibb" id="vibb"></button>
   <div class="how">
@@ -53,11 +69,12 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
   <h2 id="endTitle"></h2>
   <div class="stats" id="endStats"></div>
   <button class="big" id="again">Ещё раз</button>
+  <div><button class="vibb hidden" id="toLobby">В комнату</button></div>
 </div>
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s1',SRV_URL='wss://otboy-server.onrender.com';
+const SRV=typeof __SRV!=='undefined',VER='s2',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -1038,6 +1055,7 @@ function drawDrop(q){const t=G.t;
  ctx.strokeStyle='#4a3424';ctx.lineWidth=2;const hz=q.w>q.h;for(let k=8;k<(hz?q.w:q.h);k+=12){ctx.beginPath();if(hz){ctx.moveTo(q.x+k,q.y-14);ctx.lineTo(q.x+k,q.y+q.h-14);}else{ctx.moveTo(q.x,q.y+k-14);ctx.lineTo(q.x+q.w,q.y+k-14);}ctx.stroke();}ctx.restore();}
 function drawSurv(s){if(s.trapped){const q=s.trapped.q;ctx.strokeStyle='#9aa0a6';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(q.x-13,q.y+2);ctx.lineTo(q.x+13,q.y+2);ctx.stroke();}if(s.state==='out'||s.state==='escaped'||s.state==='locked'||s.state==='carried')return;
  const fy=s.y+10;
+ if(s.hu&&s!==P&&NET.role==='guest'&&!s.hidden){ctx.font='12px Neucha, system-ui';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.lineWidth=3;ctx.strokeStyle='rgba(20,14,10,0.7)';ctx.strokeText(s.name,s.x,fy-SH-10);ctx.fillStyle='rgba(244,234,210,0.9)';ctx.fillText(s.name,s.x,fy-SH-10);}
  if(s.isPlayer&&active(s)&&!s.hidden&&!(s.hideP>0.3)){ctx.strokeStyle='rgba(255,210,110,.7)';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(s.x,fy,20,7,0,0,7);ctx.stroke();}
  if(s.hidden)return;
  const hp=s.hideP||0,he=hp>0&&s.hideL?Math.max(0,Math.min(1,(hp-0.25)/0.5)):0,hE=he*he*(3-2*he);
@@ -1311,7 +1329,7 @@ function netApply(o){if(o.n<=NET.lastSnap)return;NET.lastSnap=o.n;NET.snAge=0;NE
  if(o.ts!=null){nClock(NET.cg,o.ts);NET.hasTs=true;}else NET.hasTs=false;const g=o.g;G.time=g[0];G.done=g[1];G.powerOn=!!g[2];if(g[3])G.lightsOn=true;if(g[5]>0||G.intro>0)G.intro=g[5];if(g[4]&&!G.over){G.over=true;later(1300,showEnd);}
  o.S.forEach((d,i)=>{const s=S[i];if(!s)return;const me=s===P,prev=s.state,wasTr=!!s.trapped,act=d.s==='ok'||d.s==='injured';
   s.tx=d.x;s.ty=d.y;s.tf=d.f;s.tl=d.l;
-  s.hu=d.hu;if(!me&&d.hu!=null)s.name=d.hu?'Друг':(s.botName||s.name);
+  s.hu=d.hu;if(!me&&d.hu!=null)s.name=d.hu?((NET.names&&NET.names[i])||'Друг'):(s.botName||s.name);
   if(me){if(d.ft||!act||d.tr||d.h||d.ex||NET.first){P.x=d.x;P.y=d.y;P.vault=null;P.hop=0;}if(!(P.flashHold>0))P.flash=!!d.fl;}
   else{s.running=!!d.r;s.hop=d.hop;s.vault=d.v>=0?{t:d.v,dur:1}:null;s.flash=!!d.fl;if(s.x===undefined||Math.hypot(s.x-d.x,s.y-d.y)>220){s.x=d.x;s.y=d.y;}if(o.ts!=null)nbPush(s,o.ts,d.x,d.y);}
   s.state=d.s;s.hidden=!!d.h;s.hideP=d.hp;s.exiting=!!d.ex;if(d.hl>=0)s.hideL=G.lockers[d.hl];s.locks=d.lk;s.lockT=d.lt;
@@ -1361,8 +1379,8 @@ function netRecv(m){if(!m)return;
   else if(m.t==='a'&&G&&S[1]&&S[1].remote&&running)remoteAct(S[1],m);}
  else if(NET.role==='guest'){
   if(m.t==='welcome'){if(!NET.peer){NET.peer=true;lobbyMsg('Подключено! Ждём, пока друг нажмёт «Играть»…');}}
-  else if(m.t==='init'){NET.slot=m.i;guestStart(m.L,m.i);}
-  else if(m.t==='room'){NET.code=m.code;$('mpCode').value=m.code;lobbyMsg('Комната '+m.code+' · игроков: '+m.n+'. Скажи код друзьям и жми «Играть»'+(m.run?' (матч уже идёт — войдёшь за бота)':''));}
+  else if(m.t==='init'){NET.slot=m.i;NET.run=true;guestStart(m.L,m.i);}
+  else if(m.t==='room'){NET.code=m.code;NET.slot=m.you;NET.pl=m.pl||[];NET.run=!!m.run;NET.names={};NET.pl.forEach(p=>NET.names[p.i]=p.name);lobbyShow();}
   else if(m.t==='err'){lobbyMsg(m.m);}
   else if(m.t==='s'&&G&&NET.live)netApply(m);}}
 function netHostTick(dt){if(!hosting()||!G)return;NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=0.1;netSend(netSnap());EVP=null;}}
@@ -1370,6 +1388,22 @@ function mpHost(){initAudio();sfx('uiclick');const code=String(1000+Math.floor(M
 function mpJoin(){initAudio();sfx('uiclick');const code=($('mpCode').value||'').trim();if(code.length<4){lobbyMsg('Введи код из 4 цифр');return;}lobbyMsg('Подключаемся…');
  netOpen(code,ok=>{if(!ok){lobbyMsg('Не получилось подключиться. Игра по сети работает только по отдельной ссылке, не внутри Claude.');return;}NET.role='guest';NET.peer=false;NET.live=false;$('play').style.display='none';lobbyMsg('Ищем комнату '+code+'…');
   netSend({t:'hello'});if(NET.hello)clearInterval(NET.hello);NET.hello=setInterval(()=>{if(!NET.live)netSend({t:'hello'});},1500);});}
+const SLOT_COL=['#d9a82b','#6b4423','#c0622a','#222'],SLOT_BOT=['Саша','Лёша','Маша','Димка'];
+function nickVal(){return ($('nick').value||'').replace(/\s+/g,' ').trim().slice(0,12);}
+function lobbyShow(){const lb=$('lobby');$('menu').classList.add('inroom');$('mpPre').classList.add('hidden');lb.classList.remove('hidden');$('lbCode').textContent=NET.code;
+ const pb=$('play');if(pb.parentNode!==$('lbPlay'))$('lbPlay').appendChild(pb);pb.style.display='';pb.textContent=NET.run?'Войти в матч':'Начать матч';
+ const box=$('lbList');box.textContent='';
+ for(let i=0;i<4;i++){const p=NET.pl.find(q=>q.i===i),row=document.createElement('div');row.className='lbRow'+(p?(i===NET.slot?' me':''):' bot');
+  const im=document.createElement('img');im.src=survImg({col:SLOT_COL[i],state:'ok'}).src;im.alt='';row.appendChild(im);
+  const nm=document.createElement('span');nm.textContent=p?p.name:SLOT_BOT[i];row.appendChild(nm);
+  const tg=document.createElement('small');tg.textContent=p?(i===NET.slot?'это ты':'игрок'):'бот';row.appendChild(tg);box.appendChild(row);}
+ lobbyMsg(NET.run?'Матч уже идёт — зайдёшь за бота':(NET.pl.length<2?'Позови друзей: скажи код или нажми «Пригласить»':'Начать может любой из комнаты'));
+ $('toLobby').classList.remove('hidden');}
+function lobbyHide(){$('menu').classList.remove('inroom');$('lobby').classList.add('hidden');$('mpPre').classList.remove('hidden');const pb=$('play'),mp=document.querySelector('.mp');if(pb.parentNode!==mp.parentNode)mp.parentNode.insertBefore(pb,mp);pb.textContent='Играть';pb.style.display='';$('toLobby').classList.add('hidden');}
+function srvLeave(){sfx('uiclick');netSend({t:'leave'});const w=NET.ws;NET.code='';NET.ws=null;NET.tx=null;try{if(w)w.close();}catch(e){}NET.role=null;NET.srv=false;NET.live=false;NET.pl=[];lobbyHide();lobbyMsg('');}
+function srvInvite(){const url=location.origin+location.pathname+'#r='+NET.code,txt='Заходи в «Отбой», комната '+NET.code;
+ if(navigator.share){navigator.share({title:'Отбой',text:txt,url}).catch(()=>{});return;}
+ const done=()=>lobbyMsg('Ссылка-приглашение скопирована');try{navigator.clipboard.writeText(url).then(done,()=>lobbyMsg(url));}catch(e){lobbyMsg(url);}}
 function srvUrl(){const h=/ws=([^&]+)/.exec(location.hash);return h?decodeURIComponent(h[1]):SRV_URL;}
 function srvWake(){try{fetch(srvUrl().replace(/^ws/,'http')+'/ping',{mode:'no-cors',cache:'no-store'}).catch(()=>{});}catch(e){}}
 function srvConnect(onOpen,onFail){const t0=performance.now();let tries=0;srvWake();
@@ -1377,10 +1411,14 @@ function srvConnect(onOpen,onFail){const t0=performance.now();let tries=0;srvWak
   ws.onopen=()=>{opened=true;NET.ws=ws;NET.tx=o=>{if(ws.readyState===1)ws.send(JSON.stringify(o));};onOpen();};
   ws.onmessage=e=>{try{netRecv(JSON.parse(e.data));}catch(er){console.error(er);}};
   ws.onclose=()=>{if(NET.ws===ws)NET.ws=null;if(!opened){if(performance.now()-t0>110000)return onFail();if(tries>1&&!NET.live)lobbyMsg('Будим сервер… это может занять до минуты');setTimeout(attempt,tries<3?800:3000);}
-   else if(NET.srv&&NET.code){lobbyMsg('Связь с сервером пропала — подключаемся заново…');setTimeout(()=>srvConnect(()=>netSend({t:'join',v:VER,code:NET.code,slot:NET.slot}),()=>lobbyMsg('Сервер недоступен. Попробуй позже.')),1000);}};})();}
+   else if(NET.srv&&NET.code){lobbyMsg('Связь с сервером пропала — подключаемся заново…');setTimeout(()=>srvConnect(()=>netSend({t:'join',v:VER,code:NET.code,slot:NET.slot,name:nickVal(),re:NET.live&&running?1:0}),()=>lobbyMsg('Сервер недоступен. Попробуй позже.')),1000);}};})();}
 function srvJoin(code){initAudio();sfx('uiclick');if(NET.ws){try{const w=NET.ws;NET.ws=null;NET.code='';w.close();}catch(e){}}NET.role='guest';NET.srv=true;NET.live=false;NET.code='';lobbyMsg('Подключаемся к серверу…');
- srvConnect(()=>{netSend(code?{t:'join',v:VER,code}:{t:'join',v:VER,create:1});},()=>{NET.role=null;NET.srv=false;lobbyMsg('Сервер недоступен. По сети игра работает только по отдельной ссылке, не внутри Claude. Если ты по ссылке — попробуй позже.');});}
+ srvConnect(()=>{netSend(code?{t:'join',v:VER,code,name:nickVal()}:{t:'join',v:VER,create:1,name:nickVal()});},()=>{NET.role=null;NET.srv=false;lobbyMsg('Сервер недоступен. По сети игра работает только по отдельной ссылке, не внутри Claude. Если ты по ссылке — попробуй позже.');});}
 setInterval(()=>{if(NET.srv&&NET.ws)srvWake();},240000);
+if(!SRV){try{$('nick').value=localStorage.getItem('otboy_nick')||'';}catch(e){}
+ $('nick').addEventListener('change',()=>{const v=nickVal();$('nick').value=v;try{localStorage.setItem('otboy_nick',v);}catch(e){}if(NET.srv&&NET.ws&&v)netSend({t:'name',name:v});});
+ $('lbLeave').onclick=srvLeave;$('lbInv').onclick=srvInvite;$('toLobby').onclick=()=>{$('end').classList.add('hidden');$('menu').classList.remove('hidden');if(NET.srv)lobbyShow();};
+ {const r=/r=(\d{4})/.exec(location.hash);if(r){$('mpCode').value=r[1];lobbyMsg('Тебя позвали в комнату '+r[1]+' — впиши ник и жми «Войти в комнату»');}}}
 if(!SRV){if(location.hash.indexOf('bc')>=0){$('mpHost').onclick=mpHost;$('mpJoin').onclick=mpJoin;}
  else{$('mpHost').onclick=()=>srvJoin(null);$('mpJoin').onclick=()=>{const code=($('mpCode').value||'').trim();if(code.length<4){lobbyMsg('Введи код из 4 цифр');return;}srvJoin(code);};}}
 let last=0;
@@ -1397,10 +1435,10 @@ function loop(t){requestAnimationFrame(loop);const now=t/1000;const raw=last?now
   ctx.fillText('FPS '+NET.fps+(NET.role==='guest'||NET.peer?' · сеть '+NET.sps+'/с · задержка '+Math.round(((NET.role==='guest'?NET.cg.dly:((S[1]&&S[1].clk)||{}).dly)||0)*1000)+' мс':'')+(QL<2?' · графика '+(QL?'средняя':'низкая'):''),8,VH-6);}}
 requestAnimationFrame(loop);
 if(SRV){const ok=v=>typeof v==='number'&&isFinite(v);
- const claim=i=>{const s=S[i];s.remote=true;s.name='Друг';s.inAge=0;s.clk={};s.path=[];s.repath=0;s.nb=null;};
+ const claim=(i,nm)=>{const s=S[i];if(nm)s.huName=nm;s.remote=true;s.name=s.huName||'Друг';s.inAge=0;s.clk={};s.path=[];s.repath=0;s.nb=null;};
  globalThis.API={
-  start(hum){newGame();P.isPlayer=false;S[0].name='Саша';S.forEach(s=>{s.botName=s.name;s.remote=false;});hum.forEach(i=>{if(S[i]){claim(i);S[i].net=null;}});running=true;NET.seq=0;EVQ.length=0;return layout();},
-  claim(i){if(S[i]){claim(i);S[i].net=null;}},
+  start(hum){newGame();P.isPlayer=false;S[0].name='Саша';S.forEach(s=>{s.botName=s.name;s.remote=false;});hum.forEach(h=>{if(S[h.i]){claim(h.i,h.name);S[h.i].net=null;}});running=true;NET.seq=0;EVQ.length=0;return layout();},
+  claim(i,nm){if(S[i]){claim(i,nm);S[i].net=null;}},
   release(i){const s=S[i];if(s){s.remote=false;s.name=s.botName;s.vault=null;s.hop=0;s.net=null;s.path=[];s.repath=0;}},
   input(i,m){const s=S&&S[i];if(!s||!m||!ok(m.x)||!ok(m.y)||!ok(m.f)||!ok(m.l))return;m.x=clamp(m.x,0,WW);m.y=clamp(m.y,0,WH);if(!s.remote)claim(i);s.net=m;s.inAge=0;if(ok(m.ts)){nClock(s.clk,m.ts);if(s.fT>0){if(s.nb)s.nb.length=0;}else nbPush2(s,m.ts,m.x,m.y);}},
   act(i,m){const s=S&&S[i];if(s&&s.remote&&G&&!G.over)remoteAct(s,m);},

@@ -43,7 +43,10 @@ const VER = makeGame().ver;
 const rooms = new Map();
 const send = (ws, o) => { if (ws.readyState === 1) ws.send(typeof o === 'string' ? o : JSON.stringify(o)); };
 const cast = (room, o) => { const s = JSON.stringify(o); for (const c of room.clients) send(c, s); };
-const roomInfo = room => ({ t: 'room', code: room.code, n: room.clients.size, run: room.running && !room.api.over() ? 1 : 0 });
+const live = room => room.running && !room.api.over();
+const cleanName = (n, slot) => { n = typeof n === 'string' ? n.replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12) : ''; return n || 'Игрок ' + (slot + 1); };
+const castRoom = room => { const pl = [...room.clients].map(c => ({ i: c.slot, name: c.name })).sort((a, b) => a.i - b.i);
+  for (const c of room.clients) send(c, { t: 'room', code: room.code, n: pl.length, run: live(room) ? 1 : 0, pl, you: c.slot }); };
 
 function newCode() { for (let i = 0; i < 200; i++) { const c = String(1000 + Math.floor(Math.random() * 9000)); if (!rooms.has(c)) return c; } return null; }
 function freeSlot(room, want) {
@@ -55,14 +58,18 @@ function freeSlot(room, want) {
 function leave(ws) {
   const room = ws.room; if (!room) return; ws.room = null;
   room.clients.delete(ws);
-  if (room.running) { try { room.api.release(ws.slot); } catch (e) {} }
-  if (room.clients.size) cast(room, roomInfo(room)); else room.emptyAt = Date.now();
+  if (room.running && ws.inGame) { try { room.api.release(ws.slot); } catch (e) {} }
+  ws.inGame = false;
+  if (room.clients.size) castRoom(room); else room.emptyAt = Date.now();
 }
 function startRoom(room) {
-  const L = room.api.start([...room.clients].map(c => c.slot));
+  const L = room.api.start([...room.clients].map(c => ({ i: c.slot, name: c.name })));
+  for (const c of room.clients) c.inGame = true;
   room.running = true; room.last = performance.now(); room.acc = 0; room.overT = 0;
   for (const c of room.clients) send(c, { t: 'init', L, i: c.slot });
+  castRoom(room);
 }
+function enter(ws, room) { ws.inGame = true; room.api.claim(ws.slot, ws.name); send(ws, { t: 'init', L: room.api.layout(), i: ws.slot }); }
 
 function onMsg(ws, m) {
   if (!m || typeof m.t !== 'string') return;
@@ -81,14 +88,16 @@ function onMsg(ws, m) {
     }
     const slot = freeSlot(room, m.slot);
     if (slot < 0) return send(ws, { t: 'err', m: 'В комнате уже 4 игрока' });
-    ws.room = room; ws.slot = slot; room.clients.add(ws); room.emptyAt = 0;
-    cast(room, roomInfo(room));
-    if (room.running && !room.api.over()) { room.api.claim(slot); send(ws, { t: 'init', L: room.api.layout(), i: slot }); }
+    ws.room = room; ws.slot = slot; ws.name = cleanName(m.name, slot); ws.inGame = false; room.clients.add(ws); room.emptyAt = 0;
+    castRoom(room);
+    if (m.re && live(room)) enter(ws, room);
     return;
   }
   const room = ws.room; if (!room) return;
-  if (m.t === 'start') { if (!room.running || room.api.over()) startRoom(room); else send(ws, { t: 'init', L: room.api.layout(), i: ws.slot }); }
-  else if (!room.running) return;
+  if (m.t === 'start') { if (!live(room)) startRoom(room); else enter(ws, room); }
+  else if (m.t === 'leave') leave(ws);
+  else if (m.t === 'name') { ws.name = cleanName(m.name, ws.slot); castRoom(room); }
+  else if (!room.running || !ws.inGame) return;
   else if (m.t === 'i') room.api.input(ws.slot, m);
   else if (m.t === 'a') room.api.act(ws.slot, m);
 }
@@ -99,7 +108,7 @@ const server = http.createServer((req, res) => {
 });
 const wss = new WebSocketServer({ server, maxPayload: 16 * 1024 });
 wss.on('connection', ws => {
-  ws.alive = true; ws.room = null; ws.slot = -1;
+  ws.alive = true; ws.room = null; ws.slot = -1; ws.name = ''; ws.inGame = false;
   ws.on('pong', () => { ws.alive = true; });
   ws.on('message', d => { let m; try { m = JSON.parse(d); } catch (e) { return; } try { onMsg(ws, m); } catch (e) { console.error('msg', e); } });
   ws.on('close', () => leave(ws));
@@ -115,7 +124,7 @@ setInterval(() => {
     try {
       room.api.tick(dt); room.acc += dt;
       if (room.acc >= SNAP) { room.acc = 0; cast(room, room.api.snap()); }
-      if (room.api.over()) { room.overT += dt; if (room.overT > 2) room.running = false; }
+      if (room.api.over()) { room.overT += dt; if (room.overT > 2) { room.running = false; for (const c of room.clients) c.inGame = false; castRoom(room); } }
     } catch (e) { console.error('tick', room.code, e); room.running = false; cast(room, { t: 'err', m: 'Ошибка на сервере — начните матч заново' }); }
   }
 }, TICK * 1000);
