@@ -429,24 +429,26 @@ function lockSurv(v,c){v.locks++;v.hidden=false;boom(c.x,c.y-20,{r:60,col:'255,8
 const keys={};
 addEventListener('keydown',e=>{keys[e.code]=true;if(G&&G.intro>0.4){G.intro=0.4;return;}if(e.code==='KeyF')toggleFlash();if(e.code==='ShiftLeft'||e.code==='ShiftRight')burst(P);if(e.code==='Space'||e.code==='KeyE'){e.preventDefault();doAct();}});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.key==='Control'){keys.ControlLeft=keys.ControlRight=false;}});
-let joy=null,aimJoy=null,mouseAim=null,joyGhost=null;
-const resetInput=()=>{for(const k in keys)keys[k]=false;joy=null;aimJoy=null;joyGhost=null;};
+let joy=null,aimJoy=null,mouseAim=null;
+const resetInput=()=>{for(const k in keys)keys[k]=false;joy=null;aimJoy=null;};
 cv.addEventListener('pointerdown',e=>{let used=false;if(G&&G.intro>0.4){G.intro=0.4;used=true;}if(G&&G.sc&&running){resolveSC();used=true;}else if(G&&P&&(P.state==='carried'||P.trapped)&&running){doAct();used=true;}const o={id:e.pointerId,ox:e.clientX,oy:e.clientY,x:e.clientX,y:e.clientY,t0:performance.now(),maxD:0,used,touch:e.pointerType!=='mouse',armed:true};
  if(e.pointerType==='mouse'){mouseAim={sx:e.clientX,sy:e.clientY};if(e.button===0)joy=o;}
- else if(!joy||joy.mouse){joy=o;
-  // на ходу: быстро отпустил и снова нажал — фонарик, движение не прерывается
-  const g=joyGhost;joyGhost=null;if(g&&!used&&performance.now()-g.t<380&&Math.hypot(e.clientX-g.ox,e.clientY-g.oy)<120&&running&&G&&P&&active(P)&&!G.sc){o.ox=g.ox;o.oy=g.oy;o.latch={dx:g.dx,dy:g.dy,t:performance.now(),th:g.run?33:18};o.maxD=Math.hypot(g.dx,g.dy);o.armed=g.armed;o.used=true;toggleFlash();}}
- else if(!aimJoy)aimJoy=o;else joy=o;
+ else if(!joy||joy.mouse)joy=o;else if(!aimJoy)aimJoy=o;else joy=o;
  try{cv.setPointerCapture(e.pointerId);}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.clientX,sy:e.clientY};
  if(joy&&joy.id===e.pointerId){joy.x=e.clientX;joy.y=e.clientY;const d=Math.hypot(joy.x-joy.ox,joy.y-joy.oy);joy.maxD=Math.max(joy.maxD||0,d);
   // палец ушёл далеко за внешний круг — рывок (срабатывает один раз, пока палец не вернётся ближе)
-  if(joy.touch&&running&&G&&P&&active(P)){if(d>150&&joy.armed){joy.armed=false;burst(P);}else if(d<95)joy.armed=true;}}
+  if(joy.touch&&running&&G&&P&&active(P)){if(d>150&&joy.armed){joy.armed=false;burst(P);}else if(d<95)joy.armed=true;
+   // «нырок»: на ходу быстро вернул палец в центр и снова оттянул — фонарик, движение не прерывается
+   const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;
+   if(joy.dip){if(now-joy.dip.t>380)joy.dip=null;else if(d>=joy.dip.th){joy.dip=null;joy.used=true;if(!G.sc)toggleFlash();}}
+   else if(d<13){const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=joy.ovW&&now-joy.ovW.t<320?joy.ovW:null,v=r||w;if(v)joy.dip={dx:v.dx,dy:v.dy,t:now,th:r?33:18};joy.ovR=joy.ovW=null;}
+   if(!joy.dip){if(d>=33)joy.ovR={dx,dy,t:now};else if(d>18)joy.ovW={dx,dy,t:now};}}}
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
 const endJoy=e=>{
  // короткое касание без движения — включить/выключить фонарик
  for(const o of [joy,aimJoy])if(o&&o.id===e.pointerId&&o.touch&&!o.used&&e.type==='pointerup'&&performance.now()-o.t0<320&&(o.maxD||0)<16&&running&&G&&P&&active(P)&&!G.sc){o.used=true;toggleFlash();}
- if(joy&&joy.id===e.pointerId){const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy);joyGhost=joy.touch&&d>18?{dx,dy,ox:joy.ox,oy:joy.oy,x:joy.x,y:joy.y,touch:true,t:performance.now(),armed:joy.armed,run:d>33}:null;joy=null;}if(aimJoy&&aimJoy.id===e.pointerId)aimJoy=null;};
+ if(joy&&joy.id===e.pointerId)joy=null;if(aimJoy&&aimJoy.id===e.pointerId)aimJoy=null;};
 for(const ev of['pointerup','pointercancel'])addEventListener(ev,endJoy,true);
 cv.addEventListener('lostpointercapture',endJoy);
 addEventListener('touchend',e=>{if(!e.touches||e.touches.length===0){joy=null;aimJoy=null;}},true);
@@ -454,15 +456,11 @@ addEventListener('blur',resetInput);
 $('flashb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();toggleFlash();});
 $('burstb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();burst(P);});
 $('throw').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();doAct();});
-const jv=()=>joy||(joyGhost&&performance.now()-joyGhost.t<380?joyGhost:null);
 function getInput(){let x=0,y=0,run=false;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  const m=Math.hypot(x,y);if(m){x/=m;y/=m;}run=!(keys.ControlLeft||keys.ControlRight);
- const now=performance.now();let gh=!joy&&joyGhost&&joyGhost.run&&now-joyGhost.t<300?joyGhost:null,gf=1;
- if(gh)gf=clamp(1-(now-gh.t-100)/200,0,1); // после отрыва: чуть по инерции и плавно гаснет
- // палец вернулся в центр — держим прежнее направление, пока он снова не оттянут
- if(joy&&joy.latch){if(Math.hypot(joy.x-joy.ox,joy.y-joy.oy)>=joy.latch.th||now-joy.latch.t>450)joy.latch=null;else gh=joy.latch;}
- let turn=null;if(joy||gh){const dx=gh?gh.dx:joy.x-joy.ox,dy=gh?gh.dy:joy.y-joy.oy,d=Math.hypot(dx,dy),R=60,tc=gh?true:joy.touch;if(tc&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(tc?18:8)){const k=Math.min(1,d/R)*gf;x=dx/d*k;y=dy/d*k;run=d>R*0.55&&gf>0.6;}}
+ if(joy&&joy.dip&&performance.now()-joy.dip.t>380)joy.dip=null;const dp=joy&&joy.dip;
+ let turn=null;if(joy){const dx=dp?dp.dx:joy.x-joy.ox,dy=dp?dp.dy:joy.y-joy.oy,d=Math.hypot(dx,dy),R=60;if(joy.touch&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(joy.touch?18:8)){const k=Math.min(1,d/R);x=dx/d*k;y=dy/d*k;run=d>R*0.55;}}
  return{x,y,run,turn};}
 function rectDist(px,py,r){const cx=clamp(px,r.x,r.x+r.w),cy=clamp(py,r.y,r.y+r.h);return Math.hypot(px-cx,py-cy);}
 function nearDrop(H){H=H||P;if(!G||!H||!active(H)||H.vault)return null;for(const d of G.drops)if(d.state==='up'&&Math.hypot(H.x-d.cx,H.y-d.cy)<Math.max(d.w,d.h)/2+34)return d;return null;}
@@ -1440,7 +1438,7 @@ function drawHUD(){
  if(P.state==='carried'&&K.carry===P&&!(K.pickT>0)){const w=Math.min(botW(),320),bcx=botCx(),x=bcx-w/2,y=VH-96,tt=isTouch?'Вырывайся! Тапай по экрану':'Вырывайся! Жми Пробел';label(x,y,w,62);ctx.fillStyle='#f0b0a0';fitFont(tt,18,w-28,12);ctx.textAlign='center';ctx.fillText(tt,bcx,y+24);
   ctx.fillStyle='#1a140f';ctx.fillRect(x+20,y+36,w-40,10);ctx.fillStyle='#d0503e';ctx.fillRect(x+21,y+37,(w-42)*P.wig,8);ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(245,235,210,.55)';ctx.lineWidth=1;ctx.strokeRect(x+20,y+36,w-40,10);ctx.setLineDash([]);}
  if(G.toast&&!(G.intro>0)){const a=Math.min(1,G.toast.ttl);ctx.globalAlpha=a;tbox(G.toast.t,VW/2,topY(),topW(),18,'#f0dca8');ctx.globalAlpha=1;}
- {const joy=jv();if(joy){ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(245,235,210,.4)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,60,0,7);ctx.stroke();if(joy.touch&&P&&active(P)){const rdy=!(P.burstCd>0);ctx.setLineDash([2,7]);ctx.strokeStyle=rdy?'rgba(140,190,255,.55)':'rgba(140,190,255,.15)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,150,0,7);ctx.stroke();ctx.strokeStyle='rgba(245,235,210,.22)';ctx.setLineDash([]);ctx.lineWidth=1;ctx.beginPath();ctx.arc(joy.ox,joy.oy,18,0,7);ctx.stroke();}ctx.setLineDash([]);const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy),k=d>60?60/d:1;feltDisc(joy.ox+dx*k,joy.oy+dy*k,22,'rgba(195,154,46,.55)',1);}}
+ if(joy){ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(245,235,210,.4)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,60,0,7);ctx.stroke();if(joy.touch&&P&&active(P)){const rdy=!(P.burstCd>0);ctx.setLineDash([2,7]);ctx.strokeStyle=rdy?'rgba(140,190,255,.55)':'rgba(140,190,255,.15)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,150,0,7);ctx.stroke();ctx.strokeStyle='rgba(245,235,210,.22)';ctx.setLineDash([]);ctx.lineWidth=1;ctx.beginPath();ctx.arc(joy.ox,joy.oy,18,0,7);ctx.stroke();}ctx.setLineDash([]);const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy),k=d>60?60/d:1;feltDisc(joy.ox+dx*k,joy.oy+dy*k,22,'rgba(195,154,46,.55)',1);}
 }
 function msg(t){tbox(t,botCx(),VH-28,Math.min(botW(),400),17,'#f0b0a0',1);}
 let lastBtn='',camLX=0,camLY=0;
