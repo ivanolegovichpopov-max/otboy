@@ -865,18 +865,24 @@ const STY={drop:{cap:'#a98458',front:'#6e5136',line:'#4a3424',picket:false},wall
 function shade(hex,a){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.round(a<0?v*(1+a):v+(255-v)*a);return'rgb('+f(r)+','+f(g)+','+f(b)+')';}
 let props=[];
 function wallH(o){return o.kind==='wall'?(o.b&&o.b.hK!=null?16+(WALLH-16)*o.b.hK:WALLH):o.kind==='low'?LOWH:o.kind==='drop'?14:FENCEH;}
-function drawLowFence(o,cy,ch,last){const H=LOWH,by=cy+ch,wood='#b78c5c',lite='#d6ad79',dark='#6b4a2c',edge='rgba(20,13,8,.75)';
- const post=(x,y)=>{ctx.fillStyle=dark;ctx.fillRect(x-3,y-H-3,6,H+3);ctx.fillStyle=wood;ctx.fillRect(x-3,y-H-3,3,H+3);ctx.fillStyle=lite;ctx.fillRect(x-4,y-H-5,8,3);ctx.strokeStyle=edge;ctx.lineWidth=1;ctx.strokeRect(x-3,y-H-3,6,H+3);};
+function drawLowFence(o,cy,ch,last){const H=LOWH,wood='#b78c5c',lite='#d6ad79',dark='#6b4a2c',edge='#140d08';
+ // столбик: общий для угла, стоит в центре толщины забора
+ const post=(x,y)=>{ctx.fillStyle=edge;ctx.fillRect(x-4.2,y-H-4.2,8.4,H+5.4);ctx.fillRect(x-5.2,y-H-6.2,10.4,5.4);ctx.fillStyle=dark;ctx.fillRect(x-3,y-H-3,6,H+3);ctx.fillStyle=wood;ctx.fillRect(x-3,y-H-3,3,H+3);ctx.fillStyle=lite;ctx.fillRect(x-4,y-H-5,8,3);};
  if(o.w>=o.h){ // вдоль экрана: ряд тонких штакетин
-  ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(o.x+3,by,o.w,3);
-  ctx.fillStyle=dark;ctx.fillRect(o.x,by-H*0.78,o.w,2.2);ctx.fillRect(o.x,by-H*0.32,o.w,2.2);
-  for(let k=o.x+5;k+4<o.x+o.w-3;k+=8){ctx.fillStyle=wood;ctx.beginPath();ctx.moveTo(k,by);ctx.lineTo(k,by-H+3);ctx.lineTo(k+2,by-H);ctx.lineTo(k+4,by-H+3);ctx.lineTo(k+4,by);ctx.closePath();ctx.fill();ctx.fillStyle=lite;ctx.fillRect(k,by-H+3,1.3,H-3);}
-  post(o.x+3,by);post(o.x+o.w-3,by);return;}
+  const by=o.y+o.h/2,xa=o.x+o.h/2,xb=o.x+o.w-o.h/2;
+  ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(xa+3,by,xb-xa,3);
+  ctx.fillStyle=edge;ctx.fillRect(xa,by-H*0.78-1.1,xb-xa,4.4);ctx.fillRect(xa,by-H*0.32-1.1,xb-xa,4.4);
+  const pk=k=>{ctx.beginPath();ctx.moveTo(k,by);ctx.lineTo(k,by-H+3);ctx.lineTo(k+2,by-H);ctx.lineTo(k+4,by-H+3);ctx.lineTo(k+4,by);ctx.closePath();};
+  ctx.strokeStyle=edge;ctx.lineWidth=2.2;ctx.lineJoin='round';for(let k=xa+6;k+4<xb-4;k+=8){pk(k);ctx.stroke();}
+  ctx.fillStyle=dark;ctx.fillRect(xa,by-H*0.78,xb-xa,2.2);ctx.fillRect(xa,by-H*0.32,xb-xa,2.2);
+  for(let k=xa+6;k+4<xb-4;k+=8){ctx.fillStyle=wood;pk(k);ctx.fill();ctx.fillStyle=lite;ctx.fillRect(k,by-H+3,1.3,H-3);}
+  post(xa,by);post(xb,by);return;}
  // вглубь экрана: те же штакетины видны с ребра — узкая линия с макушками
- const cx=o.x+o.w/2;
- ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(cx+2,cy+2,4,ch);
- for(let y=o.y+8*Math.ceil((cy-o.y+0.01)/8);y<=by+0.01;y+=8){ctx.fillStyle=wood;ctx.fillRect(cx-2,y-H,4,H);ctx.fillStyle=dark;ctx.fillRect(cx+1,y-H,1,H);ctx.fillStyle=lite;ctx.beginPath();ctx.moveTo(cx-2,y-H+2.5);ctx.lineTo(cx,y-H-0.5);ctx.lineTo(cx+2,y-H+2.5);ctx.closePath();ctx.fill();}
- if(cy===o.y)post(cx,cy+4);if(last)post(cx,by);}
+ const cx=o.x+o.w/2,ya=o.y+o.w/2,yb=o.y+o.h-o.w/2,by=cy+ch,ys=[];
+ for(let y=ya+8;y<yb-3;y+=8)if(y>cy&&y<=by)ys.push(y);
+ if(ys.length){const t=ys[0]-H-1.6,b=ys[ys.length-1];ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(cx+2,ys[0],4,b-ys[0]+3);ctx.fillStyle=edge;ctx.fillRect(cx-3.2,t,6.4,b-t+1.2);
+  for(const y of ys){ctx.fillStyle=wood;ctx.fillRect(cx-2,y-H,4,H);ctx.fillStyle=dark;ctx.fillRect(cx+1,y-H,1,H);ctx.fillStyle=lite;ctx.beginPath();ctx.moveTo(cx-2,y-H+2.5);ctx.lineTo(cx,y-H-0.5);ctx.lineTo(cx+2,y-H+2.5);ctx.closePath();ctx.fill();}}
+ if(ya>=cy&&ya<=by&&(cy===o.y||ya>cy))post(cx,ya);if(yb>cy&&yb<=by)post(cx,yb);}
 function drawBlock(o,cy,ch,last){if(o.kind==='low')return drawLowFence(o,cy,ch,last);const H=wallH(o),st=STY[o.kind]||STY.wall,cut=o.kind==='wall'&&H<40;
  if(st.picket&&o.h>o.w){const cx=o.x+o.w/2,by=cy+ch,sh=H*0.55;
   if(o.kind!=='low'){ // глухой дощатый забор: видим его верхнюю кромку и торец
@@ -1223,7 +1229,7 @@ function drawOverlayWorld(T){
   for(const o of rects){if(o.kind!=='wall'&&o.kind!=='drop')continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;
    const H=wallH(o);if(o.kind==='wall')ctx.fillRect(o.x,o.y-H,o.w,o.h);ctx.strokeRect(o.x,o.y-H,o.w,o.h+H);}
   for(const o of rects){if(o.kind!=='fence'&&o.kind!=='low')continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;const H=wallH(o);ctx.beginPath();
-   if(o.h>o.w){if(o.kind==='low'){const x=o.x+o.w/2;ctx.moveTo(x,o.y-H);ctx.lineTo(x,o.y+o.h-H);}else ctx.rect(o.x,o.y-H,o.w,o.h);}else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
+   if(o.kind==='low')continue;if(o.h>o.w)ctx.rect(o.x,o.y-H,o.w,o.h);else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
   for(const b of buildings){if(b.alpha<=0.5)continue;const qx=clamp(c.x,b.x,b.x+b.w),qy=clamp(c.y,b.y,b.y+b.h);if(Math.hypot(c.x-qx,c.y-qy)>R+60)continue;ctx.globalAlpha=b.alpha;
    ctx.strokeRect(b.x-10,b.y-WALLH-10,b.w+20,b.h+22);ctx.beginPath();ctx.moveTo(b.x,b.y+b.h);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.stroke();ctx.globalAlpha=1;}}
  ctx.globalCompositeOperation='lighter';
