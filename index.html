@@ -1439,7 +1439,7 @@ let lastBtn='',camLX=0,camLY=0;
 function draw(){
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);
  if(!G)return;
- if(G.intro>0){const f=1-G.intro/3.8,tg=f<0.4?K:P;camX+=(tg.x-camX)*(f<0.4?0.2:0.035);camY+=(tg.y-camY)*(f<0.4?0.2:0.035);}else{const ct=camTarget(),on=ct===P&&active(P)&&!P.hidden,lk=P.look??P.face,tx=on?Math.cos(lk)*0.44*VW/2/SC:0,ty=on?Math.sin(lk)*0.36*VH/2/SC:0;camLX+=(tx-camLX)*0.07;camLY+=(ty-camLY)*0.07;camX+=(ct.x+camLX-camX)*0.14;camY+=(ct.y+camLY-camY)*0.14;}
+ if(G.intro>0){const f=1-G.intro/3.8,tg=f<0.4?K:P;camX+=(tg.x-camX)*(f<0.4?0.2:0.035);camY+=(tg.y-camY)*(f<0.4?0.2:0.035);}else{const ct=camTarget(),on=ct===P&&active(P)&&!P.hidden,lk=P.look??P.face,tx=on?Math.cos(lk)*0.27*VW/2/SC:0,ty=on?Math.sin(lk)*0.22*VH/2/SC:0;camLX+=(tx-camLX)*0.03;camLY+=(ty-camLY)*0.03;camX+=(ct.x+camLX-camX)*0.1;camY+=(ct.y+camLY-camY)*0.1;}
  let shx=0,shy=0;{const ct2=camTarget(),kd2=ct2===K?999:dist(ct2,K);let amp=0;if(K.state==='chase'&&K.target===P&&kd2<220)amp=(1-kd2/220)*2.2;if(K.lunge&&kd2<200)amp+=2;if(shakeT>0){amp+=6*shakeT;shakeT=Math.max(0,shakeT-0.016);}shx=(Math.random()-0.5)*amp;shy=(Math.random()-0.5)*amp;}
  const T=[DPR*SC,0,0,DPR*SC,DPR*(VW/2-(camX+shx)*SC),DPR*(VH/2-(camY+shy)*SC)];
  ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);
