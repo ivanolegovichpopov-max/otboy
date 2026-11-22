@@ -435,7 +435,7 @@ cv.addEventListener('pointerdown',e=>{let used=false;if(G&&G.intro>0.4){G.intro=
  if(e.pointerType==='mouse'){mouseAim={sx:e.clientX,sy:e.clientY};if(e.button===0)joy=o;}
  else if(!joy||joy.mouse){joy=o;
   // на ходу: быстро отпустил и снова нажал — фонарик, движение не прерывается
-  const g=joyGhost;joyGhost=null;if(g&&!used&&performance.now()-g.t<400&&Math.hypot(e.clientX-g.x,e.clientY-g.y)<90&&running&&G&&P&&active(P)&&!G.sc){o.ox=g.ox;o.oy=g.oy;o.maxD=Math.hypot(g.dx,g.dy);o.armed=g.armed;o.used=true;toggleFlash();}}
+  const g=joyGhost;joyGhost=null;if(g&&!used&&performance.now()-g.t<380&&Math.hypot(e.clientX-g.ox,e.clientY-g.oy)<120&&running&&G&&P&&active(P)&&!G.sc){o.ox=g.ox;o.oy=g.oy;o.latch={dx:g.dx,dy:g.dy,t:performance.now(),th:g.run?33:18};o.maxD=Math.hypot(g.dx,g.dy);o.armed=g.armed;o.used=true;toggleFlash();}}
  else if(!aimJoy)aimJoy=o;else joy=o;
  try{cv.setPointerCapture(e.pointerId);}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.clientX,sy:e.clientY};
@@ -454,12 +454,15 @@ addEventListener('blur',resetInput);
 $('flashb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();toggleFlash();});
 $('burstb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();burst(P);});
 $('throw').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();doAct();});
-const jv=()=>joy||(joyGhost&&performance.now()-joyGhost.t<400?joyGhost:null);
+const jv=()=>joy||(joyGhost&&performance.now()-joyGhost.t<380?joyGhost:null);
 function getInput(){let x=0,y=0,run=false;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  const m=Math.hypot(x,y);if(m){x/=m;y/=m;}run=!(keys.ControlLeft||keys.ControlRight);
- const gh=!joy&&joyGhost&&joyGhost.run&&performance.now()-joyGhost.t<400?joyGhost:null;
- let turn=null;if(joy||gh){const dx=gh?gh.dx:joy.x-joy.ox,dy=gh?gh.dy:joy.y-joy.oy,d=Math.hypot(dx,dy),R=60,tc=gh?true:joy.touch;if(tc&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(tc?18:8)){const k=Math.min(1,d/R);x=dx/d*k;y=dy/d*k;run=d>R*0.55;}}
+ const now=performance.now();let gh=!joy&&joyGhost&&joyGhost.run&&now-joyGhost.t<300?joyGhost:null,gf=1;
+ if(gh)gf=clamp(1-(now-gh.t-100)/200,0,1); // после отрыва: чуть по инерции и плавно гаснет
+ // палец вернулся в центр — держим прежнее направление, пока он снова не оттянут
+ if(joy&&joy.latch){if(Math.hypot(joy.x-joy.ox,joy.y-joy.oy)>=joy.latch.th||now-joy.latch.t>450)joy.latch=null;else gh=joy.latch;}
+ let turn=null;if(joy||gh){const dx=gh?gh.dx:joy.x-joy.ox,dy=gh?gh.dy:joy.y-joy.oy,d=Math.hypot(dx,dy),R=60,tc=gh?true:joy.touch;if(tc&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(tc?18:8)){const k=Math.min(1,d/R)*gf;x=dx/d*k;y=dy/d*k;run=d>R*0.55&&gf>0.6;}}
  return{x,y,run,turn};}
 function rectDist(px,py,r){const cx=clamp(px,r.x,r.x+r.w),cy=clamp(py,r.y,r.y+r.h);return Math.hypot(px-cx,py-cy);}
 function nearDrop(H){H=H||P;if(!G||!H||!active(H)||H.vault)return null;for(const d of G.drops)if(d.state==='up'&&Math.hypot(H.x-d.cx,H.y-d.cy)<Math.max(d.w,d.h)/2+34)return d;return null;}
