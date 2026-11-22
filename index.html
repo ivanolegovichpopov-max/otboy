@@ -83,7 +83,7 @@ const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
 let DPR=1,VW=0,VH=0,SC=1,BSC=1,zoom=1;
 let QL=2;
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1)*(QL===2?1:QL===1?0.75:0.5);VW=innerWidth;VH=innerHeight;if(VW*VH*DPR*DPR>2.2e6)DPR=Math.sqrt(2.2e6/(VW*VH));cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);dark.width=Math.ceil(cv.width/2);dark.height=Math.ceil(cv.height/2);BSC=Math.min(VW,VH)/640;SC=BSC*(typeof zoom!=='undefined'?zoom:1);}
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1)*(QL===2?1:QL===1?0.75:0.5);VW=innerWidth;VH=innerHeight;if(VW*VH*DPR*DPR>2.2e6)DPR=Math.sqrt(2.2e6/(VW*VH));cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);dark.width=Math.ceil(cv.width/2);dark.height=Math.ceil(cv.height/2);BSC=Math.min(VW,VH)/460;SC=BSC*(typeof zoom!=='undefined'?zoom:1);}
 addEventListener('resize',resize);resize();
 
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
