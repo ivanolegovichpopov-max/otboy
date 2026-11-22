@@ -82,7 +82,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s10',SRV_URL='wss://otboy-server.onrender.com';
+const SRV=typeof __SRV!=='undefined',VER='s11',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -131,7 +131,7 @@ function hits(x,y,r){
 const CS=24,GW=WW/CS,GH=WH/CS;let grid=new Uint8Array(GW*GH);
 let gridS=new Uint8Array(GW*GH),NG=grid,inB=new Uint8Array(GW*GH),DISC=false;
 function hitsNoLow(x,y,r){for(const o of rects){if(o.open||o.kind==='low')continue;const cx=clamp(x,o.x,o.x+o.w),cy=clamp(y,o.y,o.y+o.h);if((x-cx)*(x-cx)+(y-cy)*(y-cy)<r*r)return true;}for(const c of circles){const R=r+c.r;if((x-c.x)*(x-c.x)+(y-c.y)*(y-c.y)<R*R)return true;}return false;}
-function buildGrid(){for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=i*CS+CS/2,y=j*CS+CS/2;grid[j*GW+i]=hits(x,y,17)?1:0;gridS[j*GW+i]=hitsNoLow(x,y,15)?1:0;inB[j*GW+i]=buildings.some(b=>x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h)?1:0;}}
+function buildGrid(){reachC=null;for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=i*CS+CS/2,y=j*CS+CS/2;grid[j*GW+i]=hits(x,y,17)?1:0;gridS[j*GW+i]=hitsNoLow(x,y,15)?1:0;inB[j*GW+i]=buildings.some(b=>x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h)?1:0;}}
 function freeCell(x,y){const i=clamp(Math.floor(x/CS),0,GW-1),j=clamp(Math.floor(y/CS),0,GH-1);if(!NG[j*GW+i])return j*GW+i;
  for(let r=1;r<9;r++)for(let dj=-r;dj<=r;dj++)for(let di=-r;di<=r;di++){if(Math.abs(di)!==r&&Math.abs(dj)!==r)continue;const a=i+di,b=j+dj;if(a<0||b<0||a>=GW||b>=GH)continue;if(!NG[b*GW+a])return b*GW+a;}return -1;}
 const gS=new Float32Array(GW*GH),came=new Int32Array(GW*GH),stamp=new Uint32Array(GW*GH),closedA=new Uint32Array(GW*GH);let cur=0;
@@ -360,11 +360,16 @@ const CAND={gens:[[230,220],[640,470],[1300,260],[240,1470],[1270,1490],[1910,39
  bats:[[1900,250],[1780,1420],[1180,1300],[250,800],[1500,1500],[2060,1180]],
  spawns:[[560,1135],[480,615],[1000,600],[1560,1150],[800,1250],[1300,700],[700,800],[1450,950]],
  kspawn:[[2000,600],[2150,1650],[300,1700],[1900,250],[200,250]]};
-// мебель — препятствия: кровати, тумбочка, столы со скамьями, раздача, сцена (стулья в клубе лёгкие — проходимы)
+// мебель — препятствия, блоками: группа стоящих рядом предметов закрыта целиком, вместе с узкими щелями до стен
 function addFurn(){for(const b of buildings){const sg=b.sign||'',A=(x,y,w,h)=>{const r=addR(x,y,w,h,'furn');r.b=b;};
-  if(sg.startsWith('КОРПУС')){for(const x of [b.x+30,b.x+72,b.x+114,b.x+b.w-140])A(x+2,b.y+b.h-82,30,62);for(const x of [b.x+b.w/2+30,b.x+b.w/2+76])A(x+2,b.y+28,30,62);A(b.x+b.w/2+122,b.y+30,18,16);}
-  if(sg==='СТОЛОВАЯ'){for(const [x,y] of [[50,100],[270,100],[50,200],[270,200]])A(b.x+x-4,b.y+y-11,158,60);A(b.x+182,b.y+22,156,28);}
-  if(sg==='КЛУБ')A(b.x+122,b.y+18,236,66);}}
+  if(sg.startsWith('КОРПУС')){A(b.x+8,b.y+b.h-84,142,78);A(b.x+b.w-140,b.y+b.h-84,34,78);A(b.x+b.w/2+6,b.y+8,126,84);}
+  if(sg==='СТОЛОВАЯ'){for(const [x,y] of [[50,100],[270,100],[50,200],[270,200]])A(b.x+x-4,b.y+y-13,158,64);A(b.x+182,b.y+8,156,42);}
+  if(sg==='КЛУБ'){A(b.x+122,b.y+8,236,78);A(b.x+108,b.y+118,246,158);}}}
+// куда охотник может дойти: связная область сетки от центра карты (карманы за мебелью в неё не входят)
+let reachC=null;
+function reachOK(x,y){if(!reachC){reachC=new Uint8Array(GW*GH);let st=-1,bd=1e9;for(let k=0;k<GW*GH;k++)if(!grid[k]){const i=k%GW,j=(k-i)/GW,d=Math.hypot(i*CS-WW/2,j*CS-WH/2);if(d<bd){bd=d;st=k;}}
+  const q=[st];reachC[st]=1;while(q.length){const c=q.pop(),i=c%GW,j=(c-i)/GW;for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const a=i+di,e=j+dj;if(a<0||e<0||a>=GW||e>=GH)continue;const n=e*GW+a;if(reachC[n]||grid[n])continue;reachC[n]=1;q.push(n);}}}
+ const i=Math.floor(x/CS),j=Math.floor(y/CS);return i>=0&&j>=0&&i<GW&&j<GH&&!!reachC[j*GW+i];}
 function furnRects(){const F=[[726,1406,78,68],[1528,1440,64,60]];for(const b of buildings){const sg=b.sign;
   if(sg.startsWith('КОРПУС')){for(const x of [b.x+30,b.x+72,b.x+114,b.x+b.w-140])F.push([x,b.y+b.h-91,34,74]);for(const x of [b.x+b.w/2+30,b.x+b.w/2+76])F.push([x,b.y+19,34,74]);F.push([b.x+b.w/2+122,b.y+28,18,20]);}
   if(sg==='СТОЛОВАЯ'){for(const [x,y] of [[50,100],[270,100],[50,200],[270,200]])F.push([b.x+x-6,b.y+y-15,162,69]);F.push([b.x+180,b.y+20,160,32]);}
@@ -377,7 +382,7 @@ function pickSpread(arr,n,minD){const a=arr.slice().sort(()=>Math.random()-0.5),
  for(const p of a){if(out.length>=n)break;if(!out.includes(p))out.push(p);}return out;}
 function trapSpot(near){for(let k=0;k<40;k++){let x,y;if(near||Math.random()<0.5){const g=near||G.gens[(Math.random()*G.gens.length)|0],a=Math.random()*7,r=45+Math.random()*40;x=g.x+Math.cos(a)*r;y=g.y+Math.sin(a)*r;}
   else{const p=PATHS[(Math.random()*PATHS.length)|0],i=1+((Math.random()*(p.length-1))|0),t=Math.random();x=p[i-1][0]+(p[i][0]-p[i-1][0])*t+(Math.random()-.5)*20;y=p[i-1][1]+(p[i][1]-p[i-1][1])*t+(Math.random()-.5)*20;}
-  if(x<40||y<40||x>WW-40||y>WH-40||hits(x,y,22)||!offFurn(x,y,18,12))continue;if(G.traps.some(q=>Math.hypot(q.x-x,q.y-y)<200))continue;if(S&&S.some&&S.some(s=>Math.hypot(s.x-x,s.y-y)<200))continue;return {x,y,state:'set',p:0};}return {x:1080,y:760,state:'set',p:0};}
+  if(x<40||y<40||x>WW-40||y>WH-40||hits(x,y,22)||!offFurn(x,y,18,12)||!reachOK(x,y))continue;if(G.traps.some(q=>Math.hypot(q.x-x,q.y-y)<200))continue;if(S&&S.some&&S.some(s=>Math.hypot(s.x-x,s.y-y)<200))continue;return {x,y,state:'set',p:0};}return {x:1080,y:760,state:'set',p:0};}
 function newGame(LY){
  rects=[];walls=[];circles=[];buildings=[];trees=[];
  addR(0,0,1140,20,'fence');addR(1260,0,1140,20,'fence');addR(0,WH-20,1140,20,'fence');addR(1260,WH-20,1140,20,'fence');addR(0,0,20,WH,'fence');addR(WW-20,0,20,WH,'fence');
@@ -426,7 +431,7 @@ function newGame(LY){
   if(hits(x,y,r+40))continue;
   const t={x,y,r,tree:1};trees.push(t);circles.push(t);}
  const R2=rng(3);specks=[];for(let k=0;k<700;k++)specks.push({x:R2()*WW,y:R2()*WH,s:2+R2()*3,c:R2()<0.5?'#1f2d22':'#121b15'});
- addFurn();buildGrid();makeDeco();OCC=[...trees,...deco.filter(d=>d.k==='bush').map(d=>({x:d.x,y:d.y-d.r*0.6,r:d.r+2,bush:1,d}))];buildProps();POI=[];G.intro=3.8;if(!groundC)renderGround();if(!fx)initFx();
+ addFurn();buildGrid();if(!LY){G.traps=[];for(let k=0;k<4;k++)G.traps.push(trapSpot());}makeDeco();OCC=[...trees,...deco.filter(d=>d.k==='bush').map(d=>({x:d.x,y:d.y-d.r*0.6,r:d.r+2,bush:1,d}))];buildProps();POI=[];G.intro=3.8;if(!groundC)renderGround();if(!fx)initFx();
  camX=P.x;camY=P.y;
 }
 const active=s=>s.state==='ok'||s.state==='injured';
