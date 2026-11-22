@@ -877,11 +877,12 @@ function drawLowFence(o,cy,ch,last){const H=LOWH,wood='#b78c5c',lite='#d6ad79',d
   ctx.fillStyle=dark;ctx.fillRect(xa,by-H*0.78,xb-xa,2.2);ctx.fillRect(xa,by-H*0.32,xb-xa,2.2);
   for(let k=xa+6;k+4<xb-4;k+=8){ctx.fillStyle=wood;pk(k);ctx.fill();ctx.fillStyle=lite;ctx.fillRect(k,by-H+3,1.3,H-3);}
   post(xa,by);post(xb,by);return;}
- // вглубь экрана: те же штакетины видны с ребра — узкая линия с макушками
- const cx=o.x+o.w/2,ya=o.y+o.w/2,yb=o.y+o.h-o.w/2,by=cy+ch,ys=[];
- for(let y=ya+8;y<yb-3;y+=8)if(y>cy&&y<=by)ys.push(y);
- if(ys.length){const t=ys[0]-H-1.6,b=ys[ys.length-1];ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(cx+2,ys[0],4,b-ys[0]+3);ctx.fillStyle=edge;ctx.fillRect(cx-3.2,t,6.4,b-t+1.2);
-  for(const y of ys){ctx.fillStyle=wood;ctx.fillRect(cx-2,y-H,4,H);ctx.fillStyle=dark;ctx.fillRect(cx+1,y-H,1,H);ctx.fillStyle=lite;ctx.beginPath();ctx.moveTo(cx-2,y-H+2.5);ctx.lineTo(cx,y-H-0.5);ctx.lineTo(cx+2,y-H+2.5);ctx.closePath();ctx.fill();}}
+ // вглубь экрана: отдельные заострённые штакетины стоят в ряд на общей перекладине
+ const cx=o.x+o.w/2,ya=o.y+o.w/2,yb=o.y+o.h-o.w/2,by=cy+ch,n=Math.max(1,Math.round((yb-ya)/19)),st=(yb-ya)/n;
+ // перекладина (узкая, идёт под штакетинами)
+ {const t=Math.max(cy,ya),b=Math.min(by,yb);if(b>t){ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(cx+3,t+1,3,b-t);ctx.fillStyle=edge;ctx.fillRect(cx-2.1,t-H*0.55,4.2,b-t);ctx.fillStyle=dark;ctx.fillRect(cx-1,t-H*0.55,2,b-t);}}
+ const pk=y=>{ctx.beginPath();ctx.moveTo(cx-2.5,y);ctx.lineTo(cx-2.5,y-H+3.5);ctx.lineTo(cx,y-H);ctx.lineTo(cx+2.5,y-H+3.5);ctx.lineTo(cx+2.5,y);ctx.closePath();};
+ for(let i=1;i<n;i++){const y=ya+st*i;if(!(y>cy&&y<=by))continue;ctx.strokeStyle=edge;ctx.lineWidth=2.2;ctx.lineJoin='round';pk(y);ctx.stroke();ctx.fillStyle=wood;ctx.fill();ctx.fillStyle=lite;ctx.fillRect(cx-2.5,y-H+3.5,1.4,H-3.5);ctx.fillStyle=dark;ctx.fillRect(cx+1.2,y-H+3.5,1.3,H-3.5);}
  if(ya>=cy&&ya<=by&&(cy===o.y||ya>cy))post(cx,ya);if(yb>cy&&yb<=by)post(cx,yb);}
 function drawBlock(o,cy,ch,last){if(o.kind==='low')return drawLowFence(o,cy,ch,last);const H=wallH(o),st=STY[o.kind]||STY.wall,cut=o.kind==='wall'&&H<40;
  if(st.picket&&o.h>o.w){const cx=o.x+o.w/2,by=cy+ch,sh=H*0.55;
