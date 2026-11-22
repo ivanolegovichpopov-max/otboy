@@ -442,7 +442,7 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.
    // «нырок»: на ходу быстро вернул палец в центр и снова оттянул — фонарик, движение не прерывается
    const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;
    if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;if(now-q.t>380)joy.dip=null;else if(d>14&&cs<0.3)joy.dip=null; /* палец ушёл в другую сторону — это разворот, не нырок */ else if(d>=q.th){joy.dip=null;joy.used=true;if(!G.sc)toggleFlash();}}
-   else if(d<25){const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=d<13&&joy.ovW&&now-joy.ovW.t<320?joy.ovW:null,v=r||w;if(v){joy.dip={dx:v.dx,dy:v.dy,t:now,th:r?33:18};joy.ovR=joy.ovW=null;}}
+   else{const br=joyBr(joy);if(d<br+25){const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=d<13&&joy.ovW&&now-joy.ovW.t<320?joy.ovW:null,v=r||w;if(v){joy.dip={dx:v.dx,dy:v.dy,t:now,th:r?Math.max(33,br+33):18};joy.ovR=joy.ovW=null;}}}
    if(!joy.dip){if(d>=33)joy.ovR={dx,dy,t:now};else if(d>18)joy.ovW={dx,dy,t:now};}}}
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
 const endJoy=e=>{
@@ -456,6 +456,9 @@ addEventListener('blur',resetInput);
 $('flashb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();toggleFlash();});
 $('burstb').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();burst(P);});
 $('throw').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();doAct();});
+// кнопка фонарика едет за пальцем и держится чуть позади него: вверх по радиусу сразу, назад — медленно
+function joyBr(j){const now=performance.now(),d=Math.hypot(j.x-j.ox,j.y-j.oy),tg=clamp(d-46,0,54),dt=Math.min(0.1,(now-(j.brT||now))/1000);j.brT=now;
+ if(!j.dip)j.br=tg>(j.br||0)?tg:Math.max(tg,(j.br||0)-60*dt);return j.br||0;}
 function getInput(){let x=0,y=0,run=false;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  const m=Math.hypot(x,y);if(m){x/=m;y/=m;}run=!(keys.ControlLeft||keys.ControlRight);
@@ -1444,10 +1447,10 @@ function drawHUD(){
   feltDisc(ox,oy,62,'rgba(30,23,17,.42)',3);ring(62,1.5,'rgba(20,13,8,.5)');ring(56,2,'rgba(233,223,198,.5)',[6,6]);
   if(tch){const rdy=!(P.burstCd>0);ring(150,2.5,rdy?'rgba(140,190,255,.6)':'rgba(140,190,255,.16)',[3,10]);
    // кнопка фонарика в центре: сюда «нырять» пальцем на ходу
-   const on=P.flash&&P.bat>0,dead=!(P.bat>0);ctx.globalAlpha=dead?0.4:1;
-   if(on){const g=ctx.createRadialGradient(ox,oy,10,ox,oy,38);g.addColorStop(0,'rgba(240,207,114,.4)');g.addColorStop(1,'rgba(240,207,114,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(ox,oy,38,0,7);ctx.fill();}
-   feltDisc(ox,oy,25,on?'rgba(150,112,34,.95)':'rgba(66,50,35,.95)',7);ring(25,2,'#140d08');ring(20.5,1.5,on?'rgba(255,236,170,.75)':'rgba(233,223,198,.45)',[3,4]);
-   ctx.setLineDash([]);ctx.save();ctx.translate(ox,oy);ctx.rotate(-0.6);ctx.scale(1.45,1.45);ctx.fillStyle=on?'#ffe9a6':'#e9dfc6';ctx.strokeStyle='#140d08';ctx.lineWidth=1.3;
+   const on=P.flash&&P.bat>0,dead=!(P.bat>0),br=Math.max(0,joyBr(joy)-Math.max(0,Math.hypot(joy.x-ox,joy.y-oy)-60)),q=joy.dip,vx=q?q.dx:joy.x-ox,vy=q?q.dy:joy.y-oy,vl=Math.hypot(vx,vy)||1,bx=ox+vx/vl*br,by=oy+vy/vl*br,bring=(r,w,col,dash)=>{ctx.setLineDash(dash||[]);ctx.strokeStyle=col;ctx.lineWidth=w;ctx.beginPath();ctx.arc(bx,by,r,0,7);ctx.stroke();};ctx.globalAlpha=dead?0.4:1;
+   if(on){const g=ctx.createRadialGradient(bx,by,10,bx,by,38);g.addColorStop(0,'rgba(240,207,114,.4)');g.addColorStop(1,'rgba(240,207,114,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,38,0,7);ctx.fill();}
+   feltDisc(bx,by,25,on?'rgba(150,112,34,.95)':'rgba(66,50,35,.95)',7);bring(25,2,'#140d08');bring(20.5,1.5,on?'rgba(255,236,170,.75)':'rgba(233,223,198,.45)',[3,4]);
+   ctx.setLineDash([]);ctx.save();ctx.translate(bx,by);ctx.rotate(-0.6);ctx.scale(1.45,1.45);ctx.fillStyle=on?'#ffe9a6':'#e9dfc6';ctx.strokeStyle='#140d08';ctx.lineWidth=1.3;
    ctx.beginPath();ctx.rect(-9,-3,9,6);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(5,-6.5);ctx.lineTo(5,6.5);ctx.lineTo(0,3);ctx.closePath();ctx.fill();ctx.stroke();
    if(on){ctx.strokeStyle='#ffe9a6';ctx.lineWidth=1.4;for(const a of[-0.55,0,0.55]){ctx.beginPath();ctx.moveTo(7.5*Math.cos(a)+1,7.5*Math.sin(a));ctx.lineTo(10.5*Math.cos(a)+1,10.5*Math.sin(a));ctx.stroke();}}
    ctx.restore();ctx.globalAlpha=1;}
