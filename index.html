@@ -82,7 +82,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s9',SRV_URL='wss://otboy-server.onrender.com';
+const SRV=typeof __SRV!=='undefined',VER='s10',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -360,6 +360,11 @@ const CAND={gens:[[230,220],[640,470],[1300,260],[240,1470],[1270,1490],[1910,39
  bats:[[1900,250],[1780,1420],[1180,1300],[250,800],[1500,1500],[2060,1180]],
  spawns:[[560,1135],[480,615],[1000,600],[1560,1150],[800,1250],[1300,700],[700,800],[1450,950]],
  kspawn:[[2000,600],[2150,1650],[300,1700],[1900,250],[200,250]]};
+// мебель — препятствия: кровати, тумбочка, столы со скамьями, раздача, сцена (стулья в клубе лёгкие — проходимы)
+function addFurn(){for(const b of buildings){const sg=b.sign||'',A=(x,y,w,h)=>{const r=addR(x,y,w,h,'furn');r.b=b;};
+  if(sg.startsWith('КОРПУС')){for(const x of [b.x+30,b.x+72,b.x+114,b.x+b.w-140])A(x+2,b.y+b.h-82,30,62);for(const x of [b.x+b.w/2+30,b.x+b.w/2+76])A(x+2,b.y+28,30,62);A(b.x+b.w/2+122,b.y+30,18,16);}
+  if(sg==='СТОЛОВАЯ'){for(const [x,y] of [[50,100],[270,100],[50,200],[270,200]])A(b.x+x-4,b.y+y-11,158,60);A(b.x+182,b.y+22,156,28);}
+  if(sg==='КЛУБ')A(b.x+122,b.y+18,236,66);}}
 function furnRects(){const F=[[726,1406,78,68],[1528,1440,64,60]];for(const b of buildings){const sg=b.sign;
   if(sg.startsWith('КОРПУС')){for(const x of [b.x+30,b.x+72,b.x+114,b.x+b.w-140])F.push([x,b.y+b.h-91,34,74]);for(const x of [b.x+b.w/2+30,b.x+b.w/2+76])F.push([x,b.y+19,34,74]);F.push([b.x+b.w/2+122,b.y+28,18,20]);}
   if(sg==='СТОЛОВАЯ'){for(const [x,y] of [[50,100],[270,100],[50,200],[270,200]])F.push([b.x+x-6,b.y+y-15,162,69]);F.push([b.x+180,b.y+20,160,32]);}
@@ -372,7 +377,7 @@ function pickSpread(arr,n,minD){const a=arr.slice().sort(()=>Math.random()-0.5),
  for(const p of a){if(out.length>=n)break;if(!out.includes(p))out.push(p);}return out;}
 function trapSpot(near){for(let k=0;k<40;k++){let x,y;if(near||Math.random()<0.5){const g=near||G.gens[(Math.random()*G.gens.length)|0],a=Math.random()*7,r=45+Math.random()*40;x=g.x+Math.cos(a)*r;y=g.y+Math.sin(a)*r;}
   else{const p=PATHS[(Math.random()*PATHS.length)|0],i=1+((Math.random()*(p.length-1))|0),t=Math.random();x=p[i-1][0]+(p[i][0]-p[i-1][0])*t+(Math.random()-.5)*20;y=p[i-1][1]+(p[i][1]-p[i-1][1])*t+(Math.random()-.5)*20;}
-  if(x<40||y<40||x>WW-40||y>WH-40||hits(x,y,16)||!offFurn(x,y,18,12))continue;if(G.traps.some(q=>Math.hypot(q.x-x,q.y-y)<200))continue;if(S&&S.some&&S.some(s=>Math.hypot(s.x-x,s.y-y)<200))continue;return {x,y,state:'set',p:0};}return {x:1080,y:760,state:'set',p:0};}
+  if(x<40||y<40||x>WW-40||y>WH-40||hits(x,y,22)||!offFurn(x,y,18,12))continue;if(G.traps.some(q=>Math.hypot(q.x-x,q.y-y)<200))continue;if(S&&S.some&&S.some(s=>Math.hypot(s.x-x,s.y-y)<200))continue;return {x,y,state:'set',p:0};}return {x:1080,y:760,state:'set',p:0};}
 function newGame(LY){
  rects=[];walls=[];circles=[];buildings=[];trees=[];
  addR(0,0,1140,20,'fence');addR(1260,0,1140,20,'fence');addR(0,WH-20,1140,20,'fence');addR(1260,WH-20,1140,20,'fence');addR(0,0,20,WH,'fence');addR(WW-20,0,20,WH,'fence');
@@ -421,7 +426,7 @@ function newGame(LY){
   if(hits(x,y,r+40))continue;
   const t={x,y,r,tree:1};trees.push(t);circles.push(t);}
  const R2=rng(3);specks=[];for(let k=0;k<700;k++)specks.push({x:R2()*WW,y:R2()*WH,s:2+R2()*3,c:R2()<0.5?'#1f2d22':'#121b15'});
- buildGrid();makeDeco();OCC=[...trees,...deco.filter(d=>d.k==='bush').map(d=>({x:d.x,y:d.y-d.r*0.6,r:d.r+2,bush:1,d}))];buildProps();POI=[];G.intro=3.8;if(!groundC)renderGround();if(!fx)initFx();
+ addFurn();buildGrid();makeDeco();OCC=[...trees,...deco.filter(d=>d.k==='bush').map(d=>({x:d.x,y:d.y-d.r*0.6,r:d.r+2,bush:1,d}))];buildProps();POI=[];G.intro=3.8;if(!groundC)renderGround();if(!fx)initFx();
  camX=P.x;camY=P.y;
 }
 const active=s=>s.state==='ok'||s.state==='injured';
@@ -1070,7 +1075,7 @@ function addProp(y,x0,x1,y0,y1,f){props.push({y,x0,x1,y0,y1,f});}
 let winAll=[];
 function buildProps(){props=[];windowsLit=[];winAll=[];
  for(const o of rects)if(o.kind==='wall'&&o.b&&o.w>=80&&o.h<=16){const fy=o.y+o.h-WALLH;for(let k=o.x+34;k+30<o.x+o.w-10;k+=96){const w={x:k+15,y:fy+26,gy:o.y+o.h+26,b:o.b,on:winOn(k,o.y)};winAll.push(w);if(w.on)windowsLit.push(w);}}
- for(const o of rects){if(o.kind==='gen'||o.kind==='drop')continue;
+ for(const o of rects){if(o.kind==='gen'||o.kind==='drop'||o.kind==='furn')continue;
   if(o.kind==='gate'){addProp(o.y+o.h,o.x-10,o.x+o.w+10,o.y-FENCEH-20,o.y+o.h,()=>drawGate(o));continue;}
   const H=wallH(o);
   if(o.h>o.w){for(let cy=o.y;cy<o.y+o.h;cy+=24){const ch=Math.min(24,o.y+o.h-cy),last=cy+ch>=o.y+o.h;addProp(cy+ch,o.x,o.x+o.w,cy-H,cy+ch,()=>drawBlock(o,cy,ch,last));}}
