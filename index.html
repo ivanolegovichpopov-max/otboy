@@ -59,10 +59,10 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
   <button class="vibb" id="vibb"></button>
   <div class="how">
     <b>Цель:</b> почини 5 щитков ⚡ из 7, открой ворота рычагом и беги. Через 8 минут ворота откроются сами.<br>
-    <b>Ремонт:</b> встань у щитка и не двигайся. Чинить можно только при свете: свой фонарик, лампа или луч товарища — если светит один, второму включать не нужно. Появится круг со стрелкой — нажми, когда она в жёлтой зоне. Промах — взрыв, и охотник идёт на шум.<br>
+    <b>Ремонт:</b> встань у щитка и не двигайся. При свете ремонт идёт быстро, в темноте — вчетверо медленнее. Свет годится любой: свой фонарик, лампа или луч товарища — если светит один, второму включать не нужно. Появится круг со стрелкой — нажми, когда она в жёлтой зоне. Промах — взрыв, и охотник идёт на шум.<br>
     <b>Прятки:</b> свет и фонарик выдают тебя, кусты и стены прячут. В шкафчик или ящик — встань и замри. Без света ты вдвое медленнее и всё делаешь вдвое дольше — об этом напоминает синий значок с луной. Убегать в темноте тоже труднее.<br>
     <b>Охотник:</b> первый удар ранит, второй — уносит в кладовку. Постой у кладовки, чтобы выпустить пойманного. Третья кладовка — выбываешь.<br>
-    <b>Защита:</b> перепрыгни заборчик, сделай рывок, посвети охотнику фонариком в лицо — ослепишь. Фонарик — роскошь: заряда мало, батарейки редки.<br>
+    <b>Защита:</b> перепрыгни заборчик, сделай рывок, посвети охотнику фонариком в лицо — ослепишь. Фонарик — роскошь: заряда на минуту, батарейки редки, сам он подзаряжается медленно и только пока выключен.<br>
     <b>ПК:</b> WASD — бег, Ctrl — тихий шаг, мышь — куда светить, Shift — рывок, F — фонарик, Пробел — действие.<br>
     <b>Телефон:</b> палец слева — бег (чуть-чуть — тихий шаг), палец справа — куда светить, 💨 — рывок, 🔦 — фонарик.
   </div>
@@ -77,7 +77,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s5',SRV_URL='wss://otboy-server.onrender.com';
+const SRV=typeof __SRV!=='undefined',VER='s6',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -488,7 +488,7 @@ function fleePoint(b){let best=null,bs=-1e9;for(let k=0;k<14;k++){const a=k/14*M
  return best||{x:b.x+(b.x-K.x),y:b.y+(b.y-K.y)};}
 function nearestOf(arr,p){let b=null,bd=1e9;for(const a of arr){const d=dist(a,p);if(d<bd){bd=d;b=a;}}return b;}
 function botThink(b){
- const kd=dist(b,K),chased=K.state==='chase'&&K.target===b,kvis=(chased&&kd<420)||(kd<(b.mode==='repair'&&b.path.length===0?150:240)&&seeKiller(b)>0.3&&(K.state!=='carry'||kd<150));b.flash=false;
+ const kd=dist(b,K),chased=K.state==='chase'&&K.target===b,kvis=(chased&&kd<420)||(kd<(b.mode==='repair'&&b.path.length===0?150:240)&&seeKiller(b)>0.3&&(K.state!=='carry'||kd<150)),wasOn=b.flash;b.flash=false;
  if(K.carry&&K.carry!==b&&kd<300&&kd>90&&seeKiller(b)>0.3&&!(K.pickT>0)){b.mode='blind';b.tgt=null;b.path=[];b.flash=b.bat>0.01;b.run=false;return;}
  if(!chased&&K.state!=='carry'&&(b.mode==='hide'?kd<400:(kd<300&&seeKiller(b)>0.3))&&b.flee<=0){
   if(b.mode!=='hide'){let sp=null,sd=1e9;for(const c of OCC){if(!c.bush)continue;const d=Math.hypot(c.x-b.x,c.y-b.y);if(d<150&&d<sd&&Math.hypot(c.x-K.x,c.y-K.y)>120){sd=d;sp={x:c.x,y:c.y};}}
@@ -503,10 +503,10 @@ function botThink(b){
  if(G.powerOn){const lv=nearestOf(G.levers.filter(l=>!G.gates[l.gi].open),b);if(lv){b.tgt={x:lv.x,y:lv.y};b.mode='lever';return;}}
  for(const c of G.closets){if(c.who&&c.who.state==='locked'&&dist(K,c)>300){const free=S.filter(s=>!s.isPlayer&&!s.remote&&active(s));if(nearestOf(free,c)===b){b.tgt={x:c.x,y:c.y};b.mode='rescue';b.run=c.who.lockT<20;b.flash=dist(b,c)<48&&b.bat>0.01&&!litAt(b,b.x,b.y,true);return;}}}
  if(b.state==='injured'&&dist(b,G.med)<900&&dist(K,G.med)>350){b.tgt={x:G.med.x,y:G.med.y};b.mode='heal';return;}
- const hasBat=b.bat>0.03,spare=G.bats.filter(q=>!q.taken);
- if(spare.length&&(b.bat<0.03||(b.bat<0.3&&dist(b,nearestOf(spare,b))<320))){const q=nearestOf(spare,b);if(dist(K,q)>260){b.tgt={x:q.x,y:q.y};b.mode='battery';return;}}
+ const hasBat=b.bat>(wasOn?0.01:0.2),spare=G.bats.filter(q=>!q.taken);
+ if(spare.length&&(b.bat<0.12||(b.bat<0.3&&dist(b,nearestOf(spare,b))<320))){const q=nearestOf(spare,b);if(dist(K,q)>260){b.tgt={x:q.x,y:q.y};b.mode='battery';return;}}
  let best=null,bs=1e9;for(const g of G.gens){if(g.done)continue;let sc=dist(b,g);const occ=S.filter(s=>s!==b&&active(s)&&dist(s,g)<60).length;sc+=occ>=2?500:occ*90;if(g.regress)sc-=120;if(dist(K,g)<320)sc+=600;sc-=g.p*150;
-  const free=litAt(b,g.x,g.y+12,true);if(free)sc-=260;else if(!hasBat)sc+=2500;if(sc<bs){bs=sc;best=g;}}
+  const free=litAt(b,g.x,g.y+12,true);if(free)sc-=260;else if(!hasBat)sc+=450;if(sc<bs){bs=sc;best=g;}}
  if(best){b.gen=best;const i=S.indexOf(b);b.tgt={x:best.x+Math.cos(i*2.1)*26,y:best.y+Math.sin(i*2.1)*26};b.mode='repair';
   b.flash=dist(b,best)<46&&hasBat&&kd>260&&!litAt(b,b.x,b.y,true);}
  else{b.tgt=null;b.mode='';}
@@ -547,8 +547,7 @@ function doActions(s,dt){const hasL=lit(s),dk=hasL?1:0.5;
  for(const c of G.closets){if(c.who&&c.who!==s&&c.who.state==='locked'&&dist(s,c)<48){c.p+=dt/1.5*dk;s.act={t:'Открываю кладовку',p:c.p,k:'rescue',o:c};if(c.p>=1){freeSurv(c,s);s.st.res++;}return;}}
  for(const q of G.traps){const d=Math.hypot(s.x-q.x,s.y-q.y);if(q.state==='set'&&d<36){q.p+=dt/2*dk;s.act={t:'Обезвреживаю мышеловку',p:q.p,k:'disarm',o:q};if(q.p>=1){q.state='sprung';q.p=0;sfx('snapsafe');}return;}}
  for(const l of G.levers){const g=G.gates[l.gi];if(G.powerOn&&!g.open&&dist(s,l)<44){l.p+=dt/8*dk;s.act={t:'Открываю ворота',p:l.p,k:'lever',o:l};if(l.p>=1)openGate(l.gi);return;}}
- for(const g of G.gens){if(!g.done&&dist(s,g)<46){if(!hasL){s.act={t:s.bat>0.01?'Темно — включи фонарик':'Темно — нужна батарейка или лампа',p:g.p,k:'dark',o:g};return;}
-   const mates=S.filter(o=>o!==s&&active(o)&&dist(o,g)<46&&o.wantAct).length,r=dt/65*(s.state==='injured'?0.8:1)*(mates>0?1.2:1);if(s.isPlayer)G.coop=mates>0;g.p+=r;s.score+=r*100;s.st.rep+=r;s.act={t:mates>0?'Чиним вместе · быстрее':'Чиню щиток',p:g.p,k:'repair',o:g};
+ for(const g of G.gens){if(!g.done&&dist(s,g)<46){const mates=S.filter(o=>o!==s&&active(o)&&dist(o,g)<46&&o.wantAct).length,r=dt/65*(s.state==='injured'?0.8:1)*(hasL?1:0.25)*(mates>0?1.2:1);if(s.isPlayer)G.coop=mates>0;g.p+=r;s.score+=r*100;s.st.rep+=r;s.act={t:!hasL?'Чиню в темноте · вчетверо медленнее':mates>0?'Чиним вместе · быстрее':'Чиню щиток',p:g.p,k:'repair',o:g};
    if(s.isPlayer)scTick(s,g,dt);
    else if(!s.remote){g.nt-=dt;if(g.nt<=0){g.nt=7+Math.random()*7;if(Math.random()<0.25)scFail(g,s);}}
    if(g.p>=1)genDone(g);return;}}
@@ -726,6 +725,7 @@ function update(dt){
   if(b.t<=0){b.done=true;noise(b.x,b.y,720);G.dropped.push({x:b.x-b.vx*dt,y:b.y-b.vy*dt});const d=dist(b,camTarget());sfx('thump',Math.max(0.2,1-d/700));}}
  G.fly=G.fly.filter(b=>!b.done);
  for(const H of S){if(!active(H))continue;
+  if(!H.flash&&H.bat<1)H.bat=Math.min(1,H.bat+dt/210);
   if(H.flash){H.bat=Math.max(0,H.bat-dt/60);if(H.bat<=0){H.flash=false;if(H.isPlayer){G.toast={t:'Фонарик сел — найди батарейку',ttl:3};sfx('click');}}}
   for(const b of G.bats){if(!b.taken&&dist(H,b)<26){b.taken=true;H.bat=Math.min(1,H.bat+0.65);stars(b.x,b.y-8,10,'150,235,225',{v:140,vz:240});floatTxt(b.x,b.y-40,'+заряд','#8fd0c8');ring(b.x,b.y,40,'#8fd0c8',0.5);if(H.isPlayer){sfx('battery');vib(20);}}}
   for(const b of G.balls){if(!b.taken&&H.ball<2&&dist(H,b)<26){b.taken=true;H.ball++;floatTxt(b.x,b.y-40,'+мяч','#f4ead2');if(H.isPlayer)sfx('pick');}}}
@@ -1217,7 +1217,7 @@ function label(x,y,w,h){ctx.fillStyle='rgba(0,0,0,.4)';rr(ctx,x+2,y+3,w,h,10);ct
  ctx.setLineDash([4,3.5]);ctx.strokeStyle='rgba(233,220,192,.55)';ctx.lineWidth=1.3;rr(ctx,x+4,y+4,w-8,h-8,7);ctx.stroke();ctx.setLineDash([]);}
 function badge(x,y,g,col,a){ctx.globalAlpha=a;ctx.fillStyle='rgba(12,14,20,.82)';ctx.beginPath();ctx.arc(x,y,12,0,7);ctx.fill();ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(x,y,12,0,7);ctx.stroke();
  ctx.fillStyle=col;ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g,x,y+0.5);ctx.textBaseline='alphabetic';ctx.globalAlpha=1;}
-const HINTS={trap:'Мышеловка охотника — постой рядом, чтобы обезвредить. В темноте её видно только в луче',genbad:'Щиток испорчен охотником — откатывается, пока его не чинят',crate:'Ящик — встань в него и замри, чтобы спрятаться',battery:'Батарейка — редкая находка, подзарядит фонарик',gen:'Щиток — чинить можно только при свете: включи фонарик или встань под лампу',drop:'Щит — урони его перед охотником: '+(isTouch?'кнопка ✋':'Пробел'),locker:'Шкафчик — встань в него и замри, чтобы спрятаться',
+const HINTS={trap:'Мышеловка охотника — постой рядом, чтобы обезвредить. В темноте её видно только в луче',genbad:'Щиток испорчен охотником — откатывается, пока его не чинят',crate:'Ящик — встань в него и замри, чтобы спрятаться',battery:'Батарейка — редкая находка, подзарядит фонарик',gen:'Щиток — при свете чинится быстро, в темноте вчетверо медленнее',drop:'Щит — урони его перед охотником: '+(isTouch?'кнопка ✋':'Пробел'),locker:'Шкафчик — встань в него и замри, чтобы спрятаться',
  med:'Кушетка — постой рядом, чтобы вылечиться',ball:'Мяч — подбери и брось ('+(isTouch?'кнопка 🏐':'Пробел')+'): шум отвлечёт охотника',fence:'Заборчик — беги прямо на него, чтобы перепрыгнуть',
  closet:'Кладовка — постой рядом, чтобы выпустить пойманного',lever:'Рычаг — постой рядом, чтобы открыть ворота'};
 function interactables(){const L=[];
@@ -1315,7 +1315,7 @@ function drawHUD(){
  {const seen=(K.state==='chase'&&K.target===P)||P.revealT>0,exp=!seen&&(inLight(P.x,P.y)||P.flash),hid=!seen&&!exp;if(active(P)){const stx=(P.revealT>0&&!(K.state==='chase'&&K.target===P)?'охотник знает, где ты':seen?'тебя видят':exp?(inLight(P.x,P.y)?'на свету':'фонарик выдаёт'):(inBush(P)?'в кустах':'в тени'))+(P.running&&!seen?' · шум':'');ctx.font='16px Neucha, system-ui';label(12,76,Math.max(150,50+ctx.measureText(stx).width+18),34);{const bx=12,by=114;label(bx,by,P.flash?190:216,30);ctx.save();ctx.translate(bx+22,by+15);ctx.fillStyle='#2f7a74';rr(ctx,-10,-6,18,12,3);ctx.fill();ctx.fillStyle='#d9c29a';ctx.fillRect(8,-3,3,6);ctx.restore();
   const seg=6,w=118;for(let i=0;i<seg;i++){const on=P.bat>i/seg+0.001;ctx.fillStyle=on?(P.bat<0.2?'#d0503e':'#8fd0c8'):'rgba(255,255,255,.08)';ctx.fillRect(bx+44+i*(w/seg),by+9,w/seg-4,12);}
   ctx.fillStyle=P.flash?'#f0dca8':'#8f876f';ctx.font='13px Neucha, system-ui';ctx.textAlign='left';ctx.fillText(P.flash?'':'выкл',bx+170,by+20);
-   if(!lit(P)){const ch=K.state==='chase'&&K.target===P,tx=ch?'темно: бежишь медленнее':'темно: всё вдвое медленнее',yy=148;ctx.font='15px Neucha, system-ui';label(12,yy,50+ctx.measureText(tx).width+16,30);darkBadge(32,yy+15,11);ctx.font='15px Neucha, system-ui';ctx.textAlign='left';ctx.fillStyle='#9fb4e8';ctx.fillText(tx,50,yy+20);}}const col=seen?'#d0503e':exp?'#d9a83a':'#6fa86a';feltDisc(32,93,11,col,2);ctx.strokeStyle='#f4ead2';ctx.lineWidth=1.8;ctx.beginPath();if(hid){ctx.moveTo(25,92);ctx.quadraticCurveTo(32,98,39,92);}else{ctx.moveTo(24,93);ctx.quadraticCurveTo(32,85,40,93);ctx.quadraticCurveTo(32,101,24,93);ctx.moveTo(34.5,93);ctx.arc(32,93,2.5,0,7);}ctx.stroke();
+   if(!lit(P)){const ch=K.state==='chase'&&K.target===P,tx=ch?'темно: бежишь медленнее':'темно: всё медленнее',yy=148;ctx.font='15px Neucha, system-ui';label(12,yy,50+ctx.measureText(tx).width+16,30);darkBadge(32,yy+15,11);ctx.font='15px Neucha, system-ui';ctx.textAlign='left';ctx.fillStyle='#9fb4e8';ctx.fillText(tx,50,yy+20);}}const col=seen?'#d0503e':exp?'#d9a83a':'#6fa86a';feltDisc(32,93,11,col,2);ctx.strokeStyle='#f4ead2';ctx.lineWidth=1.8;ctx.beginPath();if(hid){ctx.moveTo(25,92);ctx.quadraticCurveTo(32,98,39,92);}else{ctx.moveTo(24,93);ctx.quadraticCurveTo(32,85,40,93);ctx.quadraticCurveTo(32,101,24,93);ctx.moveTo(34.5,93);ctx.arc(32,93,2.5,0,7);}ctx.stroke();
   ctx.font='16px Neucha, system-ui';ctx.textAlign='left';ctx.fillStyle=col;ctx.fillText(stx,50,99);}}patch(36,41,G.powerOn?'gendone':'gen',1,{});
  ctx.textAlign='left';ctx.font='26px Neucha, system-ui';ctx.fillStyle=G.powerOn?'#a8e0a0':'#f0cf72';ctx.fillText(Math.min(G.done,5)+' / 5',58,40);
  ctx.font='17px Neucha, system-ui';ctx.fillStyle='#d9ccb0';const tm=Math.max(0,G.time);if(!(G.time>0))fitFont('ворота открыты',17,82,11);ctx.fillText(G.time>0?(Math.floor(tm/60)+':'+String(Math.floor(tm%60)).padStart(2,'0')):'ворота открыты',58,60);
