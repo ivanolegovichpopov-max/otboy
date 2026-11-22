@@ -873,14 +873,14 @@ function drawBlock(o,cy,ch,last){const H=wallH(o),st=STY[o.kind]||STY.wall,cut=o
    ctx.strokeStyle=st.line;ctx.lineWidth=1.5;for(let y=cy;y<by;y+=12){ctx.beginPath();ctx.moveTo(o.x+5,y-H);ctx.lineTo(o.x+o.w-4,y-H);ctx.stroke();}
    if(last){ctx.fillStyle=shade(st.front,-0.15);ctx.fillRect(o.x,by-H,o.w,H);ctx.strokeStyle=st.line;for(let k=o.x+7;k<o.x+o.w;k+=7){ctx.beginPath();ctx.moveTo(k,by-H);ctx.lineTo(k,by);ctx.stroke();}}
    return;}
-  // низкий заборчик: столбики и две перекладины
-  const n=Math.round((cy-o.y)/24),isPost=last||n%2===1;
-  ctx.strokeStyle='rgba(0,0,0,.22)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx+sh*0.8,cy+sh*0.25);ctx.lineTo(cx+sh*0.8,by+sh*0.25);ctx.moveTo(cx+sh*0.4,cy+sh*0.12);ctx.lineTo(cx+sh*0.4,by+sh*0.12);ctx.stroke();
-  ctx.fillStyle=shade(st.front,-0.25);ctx.fillRect(cx-2,cy-H*0.42,4,ch+1);ctx.fillStyle=shade(st.cap,0.1);ctx.fillRect(cx-2.5,cy-H*0.85,5,ch+1);ctx.fillStyle=shade(st.front,-0.4);ctx.fillRect(cx+1.5,cy-H*0.85,1,ch+1);
-  const post=y=>{const w=11;ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.moveTo(cx-w/2,y);ctx.lineTo(cx+w/2,y);ctx.lineTo(cx+w/2+sh,y+sh*0.28);ctx.lineTo(cx-w/2+sh,y+sh*0.28);ctx.fill();
-   ctx.fillStyle=st.front;ctx.fillRect(cx-w/2,y-H-4,w,H+4);ctx.fillStyle=shade(st.cap,0.1);ctx.fillRect(cx-w/2,y-H-4,w*0.45,H+4);ctx.strokeStyle='#140d08';ctx.lineWidth=1.3;ctx.strokeRect(cx-w/2,y-H-4,w,H+4);
-   ctx.fillStyle=shade(st.cap,0.32);ctx.fillRect(cx-w/2-1.5,y-H-8,w+3,5);ctx.strokeRect(cx-w/2-1.5,y-H-8,w+3,5);};
-  if(cy===o.y)post(cy+5);if(isPost)post(by);return;}
+  // низкий заборчик: тот же штакетник, что и горизонтальный, той же толщины, только повёрнут; с обводкой
+  const W=30,x0=cx-W/2,e=H*0.4,capW=11,first=cy===o.y;
+  ctx.fillStyle='rgba(0,0,0,.24)';ctx.fillRect(x0+5,cy+3,W,ch);
+  ctx.fillStyle=st.cap;ctx.fillRect(x0,cy-e,capW,ch);
+  ctx.fillStyle=st.front;for(let k=Math.ceil((cy-o.y)/13)*13+o.y;k<by;k+=13){const ph=Math.min(10,o.y+o.h-k),y=k-e;ctx.beginPath();ctx.moveTo(x0+W,y);ctx.lineTo(x0+capW+4,y);ctx.lineTo(x0+capW-3,y+ph/2);ctx.lineTo(x0+capW+4,y+ph);ctx.lineTo(x0+W,y+ph);ctx.fill();}
+  ctx.fillStyle=st.line;ctx.fillRect(x0+capW+(W-capW)*0.3,cy-e,3,ch);ctx.fillRect(x0+capW+(W-capW)*0.74,cy-e,3,ch);
+  ctx.strokeStyle='#140d08';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0,cy-e);ctx.lineTo(x0,by-e);ctx.moveTo(x0+W,cy-e);ctx.lineTo(x0+W,by-e);if(first){ctx.moveTo(x0,cy-e);ctx.lineTo(x0+W,cy-e);}if(last){ctx.moveTo(x0,by-e);ctx.lineTo(x0+W,by-e);}ctx.stroke();
+  return;}
  // тень на земле
  if(o.kind!=='wall'&&last){ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(o.x+4,cy+ch,o.w+H*0.4,5);}
  // крышка стены
@@ -890,7 +890,7 @@ function drawBlock(o,cy,ch,last){const H=wallH(o),st=STY[o.kind]||STY.wall,cut=o
  // лицевая сторона
  if(last){const fy=cy+ch-H;
   if(st.picket){ctx.fillStyle=st.front;for(let k=o.x;k<o.x+o.w;k+=13){const pw=Math.min(10,o.x+o.w-k);ctx.beginPath();ctx.moveTo(k,cy+ch);ctx.lineTo(k,fy+5);ctx.lineTo(k+pw/2,fy-3);ctx.lineTo(k+pw,fy+5);ctx.lineTo(k+pw,cy+ch);ctx.fill();}
-   ctx.fillStyle=st.line;ctx.fillRect(o.x,fy+H*0.3,o.w,3);ctx.fillRect(o.x,fy+H*0.72,o.w,3);}
+   ctx.fillStyle=st.line;ctx.fillRect(o.x,fy+H*0.3,o.w,3);ctx.fillRect(o.x,fy+H*0.72,o.w,3);ctx.strokeStyle='#140d08';ctx.lineWidth=2;ctx.strokeRect(o.x,cy-H,o.w,ch+H);}
   else{ctx.fillStyle=st.front;ctx.fillRect(o.x,fy,o.w,H);ctx.strokeStyle=st.line;ctx.lineWidth=2;
    for(let k=o.x+14;k<o.x+o.w;k+=14){ctx.beginPath();ctx.moveTo(k,fy);ctx.lineTo(k,fy+H);ctx.stroke();}
    ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(o.x,fy+H-Math.min(6,H*0.3),o.w,Math.min(6,H*0.3));
@@ -1218,7 +1218,7 @@ function drawOverlayWorld(T){
   for(const o of rects){if(o.kind!=='wall'&&o.kind!=='drop')continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;
    const H=wallH(o);if(o.kind==='wall')ctx.fillRect(o.x,o.y-H,o.w,o.h);ctx.strokeRect(o.x,o.y-H,o.w,o.h+H);}
   for(const o of rects){if(o.kind!=='fence'&&o.kind!=='low')continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;const H=wallH(o);ctx.beginPath();
-   if(o.h>o.w){const x=o.x+o.w/2;ctx.moveTo(x-6,o.y-H);ctx.lineTo(x-6,o.y+o.h-H);ctx.moveTo(x+6,o.y-H);ctx.lineTo(x+6,o.y+o.h-H);}else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
+   if(o.h>o.w){const x=o.x+o.w/2,hw=o.kind==='low'?15:o.w/2,e=o.kind==='low'?H*0.4:H;ctx.rect(x-hw,o.y-e,hw*2,o.h);}else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
   for(const b of buildings){if(b.alpha<=0.5)continue;const qx=clamp(c.x,b.x,b.x+b.w),qy=clamp(c.y,b.y,b.y+b.h);if(Math.hypot(c.x-qx,c.y-qy)>R+60)continue;ctx.globalAlpha=b.alpha;
    ctx.strokeRect(b.x-10,b.y-WALLH-10,b.w+20,b.h+22);ctx.beginPath();ctx.moveTo(b.x,b.y+b.h);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.stroke();ctx.globalAlpha=1;}}
  ctx.globalCompositeOperation='lighter';
@@ -1257,7 +1257,7 @@ function drawOverlayWorld(T){
  {const ct=camTarget(),L=interactables();
   const used=S.filter(s=>active(s)&&s.act&&s.act.o&&nearCam(s.x,s.y,700)).map(s=>s.act.o);
   for(const it of L){if(used.some(o=>Math.abs(o.x-it.x)<2&&Math.abs(o.y-it.y)<2))continue;const d=Math.hypot(it.x-ct.x,it.y-ct.y);if(d>760)continue;if(ct===P&&active(P)&&!(d<130||inLight(it.x,it.y)||inBeam(P,it.x,it.y)||it.t==='closet'||it.t==='lever'))continue;const a=Math.min(1,1.25-d/760)*(it.dim?0.55:1);
-   if(it.t==='fence'){if(d>320)continue;ctx.globalAlpha=0.5*(1-d/320);ctx.setLineDash([5,5]);ctx.strokeStyle='#e9dcc0';ctx.lineWidth=1.8;ctx.strokeRect(it.o.x-3,it.o.y-LOWH-3,it.o.w+6,it.o.h+LOWH+6);ctx.setLineDash([]);ctx.globalAlpha=1;}
+   if(it.t==='fence'){if(d>320)continue;ctx.globalAlpha=0.5*(1-d/320);ctx.setLineDash([5,5]);ctx.strokeStyle='#e9dcc0';ctx.lineWidth=1.8;if(it.o.h>it.o.w)ctx.strokeRect(it.o.x+it.o.w/2-19,it.o.y-LOWH*0.4-4,38,it.o.h+8);else ctx.strokeRect(it.o.x-4,it.o.y-LOWH-4,it.o.w+8,it.o.h+LOWH+8);ctx.setLineDash([]);ctx.globalAlpha=1;}
    const bob=Math.sin(G.t*2.4+it.x)*1.8;patch(it.x,it.py+bob,it.t,a,it);
    if(it.t==='closet'){ctx.font='bold 15px Neucha, system-ui';ctx.textAlign='center';ctx.fillStyle='#f4ead2';ctx.strokeStyle='rgba(20,12,8,.9)';ctx.lineWidth=3;const s=Math.ceil(it.sec)+'';ctx.strokeText(s,it.x,it.py+bob-20);ctx.fillText(s,it.x,it.py+bob-20);}}}
  // глаза вожатого
