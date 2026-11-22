@@ -440,12 +440,14 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.
   // палец ушёл далеко за внешний круг — рывок (срабатывает один раз, пока палец не вернётся ближе)
   if(joy.touch&&running&&G&&P&&active(P)){if(d>150&&joy.armed){joy.armed=false;burst(P);}else if(d<95)joy.armed=true;
    // «нырок»: на ходу быстро вернул палец в центр и снова оттянул — фонарик, движение не прерывается
-   const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(!joy.hs)joy.hs=[];joy.hs.push([now,d]);while(joy.hs.length>1&&now-joy.hs[1][0]>230)joy.hs.shift();
-   if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;q.min=Math.min(q.min??d,d);if(now-q.t>480)dipEnd(joy);else if(d>14&&cs<0.2)dipEnd(joy); /* палец ушёл в другую сторону — это разворот, не нырок */ else if(q.th!=null?d>=q.th:d>=q.min+6){dipEnd(joy);joy.used=true;joy.dipT=now;if(!G.sc)toggleFlash();}}
+   const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(!joy.hs)joy.hs=[];joy.hs.push([now,d,dx,dy]);while(joy.hs.length>1&&now-joy.hs[1][0]>230)joy.hs.shift();
+   if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;q.min=Math.min(q.min??d,d);if(now-q.t>480)dipEnd(joy);else if(d>14&&cs<0.2)dipEnd(joy); /* палец ушёл в другую сторону — это разворот, не нырок */ else if(q.th!=null?d>=q.th:d>=q.min+Math.max(6,(q.pk-q.min)*0.25)){dipEnd(joy);joy.used=true;joy.dipT=now;if(!G.sc)toggleFlash();}}
    else{// нырок = рывок пальца назад к центру (от 11px за ~0,2 с) и любое движение обратно (от 6px); место и сила не важны
-    let pk=0;for(const h of joy.hs)pk=Math.max(pk,h[1]);
+    let pk=0,ph=null;for(const h of joy.hs)if(h[1]>pk){pk=h[1];ph=h;}
+    // боковой сдвиг пальца с момента пика: при повороте он большой, при рывке назад — маленький
+    const lat=ph&&pk>0?Math.abs(dx*ph[3]-dy*ph[2])/pk:0,drop=pk-d;
     const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=joy.ovW&&now-joy.ovW.t<320?joy.ovW:null;
-    if(r&&pk>=33&&pk-d>=11&&now-(joy.dipT||0)>250){joy.dip={dx:r.dx,dy:r.dy,t:now,min:d};joy.ovR=joy.ovW=null;joy.hs=[];}
+    if(r&&pk>=33&&drop>=Math.max(11,pk*0.15)&&lat<drop+4&&now-(joy.dipT||0)>250){joy.dip={dx:r.dx,dy:r.dy,t:now,min:d,pk};joy.ovR=joy.ovW=null;joy.hs=[];}
     else if(!r&&w&&d<13){joy.dip={dx:w.dx,dy:w.dy,t:now,th:18};joy.ovR=joy.ovW=null;joy.hs=[];}}
    if(!joy.dip){if(d>=33)joy.ovR={dx,dy,t:now};else if(d>18)joy.ovW={dx,dy,t:now};}}}
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
