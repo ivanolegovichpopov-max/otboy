@@ -62,7 +62,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
     <b>Ремонт:</b> встань у щитка и не двигайся. Чинить можно только при свете: свой фонарик, лампа или луч товарища. Появится круг со стрелкой — нажми, когда она в жёлтой зоне. Промах — взрыв, и охотник идёт на шум.<br>
     <b>Прятки:</b> свет и фонарик выдают тебя, кусты и стены прячут. В шкафчик или ящик — встань и замри. Без света ты вдвое медленнее и всё делаешь вдвое дольше.<br>
     <b>Охотник:</b> первый удар ранит, второй — уносит в кладовку. Постой у кладовки, чтобы выпустить пойманного. Третья кладовка — выбываешь.<br>
-    <b>Защита:</b> перепрыгни заборчик, сделай рывок, посвети охотнику фонариком в лицо — ослепишь. Заряд фонарика не бесконечен, ищи батарейки.<br>
+    <b>Защита:</b> перепрыгни заборчик, сделай рывок, посвети охотнику фонариком в лицо — ослепишь. Фонарик — роскошь: заряда мало, батарейки редки.<br>
     <b>ПК:</b> WASD — бег, Ctrl — тихий шаг, мышь — куда светить, Shift — рывок, F — фонарик, Пробел — действие.<br>
     <b>Телефон:</b> палец слева — бег (чуть-чуть — тихий шаг), палец справа — куда светить, 💨 — рывок, 🔦 — фонарик.
   </div>
@@ -380,7 +380,7 @@ function newGame(LY){
   lockers:LY?LY.lockers.map(([x,y,c])=>({x,y,crate:!!c})):pickSpread(CAND.lockers,6,150).map(([x,y])=>({x,y})).concat(pickSpread(CAND.crates,7,250).map(([x,y])=>({x,y,crate:true}))),
   med:{x:1700,y:260},
   balls:[],
-  bats:(LY?LY.bats:pickSpread(CAND.bats,5,300)).map(([x,y])=>({x,y,taken:false})),
+  bats:(LY?LY.bats:pickSpread(CAND.bats,3,500)).map(([x,y])=>({x,y,taken:false})),
   fly:[],dropped:[],noises:[],marks:[],puffs:[],fx:[],rings:[],bursts:[],scorch:[],
   gates:[{rect:gateN,open:false,ex:1200,ey:4,north:true},{rect:gateS,open:false,ex:1200,ey:WH-4,north:false}],
   levers:[{x:1090,y:62,p:0,gi:0},{x:1090,y:WH-62,p:0,gi:1}],
@@ -720,7 +720,7 @@ function update(dt){
   if(b.t<=0){b.done=true;noise(b.x,b.y,720);G.dropped.push({x:b.x-b.vx*dt,y:b.y-b.vy*dt});const d=dist(b,camTarget());sfx('thump',Math.max(0.2,1-d/700));}}
  G.fly=G.fly.filter(b=>!b.done);
  for(const H of S){if(!(H.isPlayer||H.remote)||!active(H))continue;
-  if(H.flash){H.bat=Math.max(0,H.bat-dt/120);if(H.bat<=0){H.flash=false;if(H.isPlayer){G.toast={t:'Фонарик сел — найди батарейку',ttl:3};sfx('click');}}}
+  if(H.flash){H.bat=Math.max(0,H.bat-dt/60);if(H.bat<=0){H.flash=false;if(H.isPlayer){G.toast={t:'Фонарик сел — найди батарейку',ttl:3};sfx('click');}}}
   for(const b of G.bats){if(!b.taken&&dist(H,b)<26){b.taken=true;H.bat=Math.min(1,H.bat+0.65);stars(b.x,b.y-8,10,'150,235,225',{v:140,vz:240});floatTxt(b.x,b.y-40,'+заряд','#8fd0c8');ring(b.x,b.y,40,'#8fd0c8',0.5);if(H.isPlayer){sfx('battery');vib(20);}}}
   for(const b of G.balls){if(!b.taken&&H.ball<2&&dist(H,b)<26){b.taken=true;H.ball++;floatTxt(b.x,b.y-40,'+мяч','#f4ead2');if(H.isPlayer)sfx('pick');}}}
  // ослепление охотника фонариком
