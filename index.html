@@ -1187,7 +1187,9 @@ function drawPuppet(kind,im,e,x,y,alpha,ps){const D=PUP[kind],k=D.H/D.h,b=ps.bob
 // куда повернуть руку, чтобы кисть легла в точку (tx,ty) относительно ступней куклы; side: 1 — правая, -1 — левая
 function armTo(kind,side,tx,ty){const D=PUP[kind],k=D.H/D.h,p=side>0?D.armR:D.armL,sx=(p[0]-D.w/2)*k,sy=-(D.h-p[1])*k;return Math.atan2(-(tx-sx),ty-sy)+(side>0?0.2:-0.2);}
 function animStep(e){if(e.px===undefined){e.px=e.x;e.py=e.y;e.anim=0;e.flip=false;e.back=false;}const dx=e.x-e.px,dy=e.y-e.py,m=Math.hypot(dx,dy);
- if(Math.abs(dx)>0.3)e.flip=dx<0;if(m>0.25){if(dy<-Math.abs(dx)*0.9)e.back=true;else if(dy>Math.abs(dx)*0.35||Math.abs(dx)>Math.abs(dy)*1.6)e.back=false;}e.anim+=m*(e===K?0.06:0.085);e.mv=m>0.2;e.px=e.x;e.py=e.y;}
+ if(Math.abs(dx)>0.3)e.flip=dx<0;if(m>0.25){if(dy<-Math.abs(dx)*0.9)e.back=true;else if(dy>Math.abs(dx)*0.35||Math.abs(dx)>Math.abs(dy)*1.6)e.back=false;}// шаг удлиняется со скоростью: шагом ~3 шага в секунду, бегом ~4, на рывке ~4,5 — а не «пулемёт»
+ {const nw=performance.now()/1000,dt=clamp(nw-(e.at||nw-0.016),0.004,0.1),sp=m/dt;e.at=nw;if(sp<520)e.anim+=e===K?m*0.06:m*Math.PI/(21+0.15*Math.min(sp,320));}
+ e.mv=m>0.2;e.px=e.x;e.py=e.y;}
 function drawSprite(img,x,y,h,ratio,e,alpha){if(!img.complete||!img.naturalWidth)return;const t=G.t;
  const bob=e.mv?Math.abs(Math.sin(e.anim))*4:Math.sin(t*2.2+x)*0.8,tilt=e.mv?Math.sin(e.anim)*0.09:0,w=h*ratio;
  ctx.save();ctx.translate(x,y);ctx.rotate(tilt);ctx.scale(e.flip?-1:1,1);ctx.globalAlpha=alpha==null?1:alpha;ctx.drawImage(img,-w/2,-h-bob,w,h);ctx.restore();}
