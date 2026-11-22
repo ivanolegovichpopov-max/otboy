@@ -435,7 +435,7 @@ cv.addEventListener('pointerdown',e=>{let used=false;if(G&&G.intro>0.4){G.intro=
  if(e.pointerType==='mouse'){mouseAim={sx:e.clientX,sy:e.clientY};if(e.button===0)joy=o;}
  else if(!joy||joy.mouse){joy=o;
   // на ходу: быстро отпустил и снова нажал — фонарик, движение не прерывается
-  const g=joyGhost;joyGhost=null;if(g&&!used&&performance.now()-g.t<260&&running&&G&&P&&active(P)&&!G.sc){o.ox=e.clientX-g.dx;o.oy=e.clientY-g.dy;o.maxD=Math.hypot(g.dx,g.dy);o.armed=g.armed;o.used=true;toggleFlash();}}
+  const g=joyGhost;joyGhost=null;if(g&&!used&&performance.now()-g.t<400&&running&&G&&P&&active(P)&&!G.sc){o.ox=e.clientX-g.dx;o.oy=e.clientY-g.dy;o.maxD=Math.hypot(g.dx,g.dy);o.armed=g.armed;o.used=true;toggleFlash();}}
  else if(!aimJoy)aimJoy=o;else joy=o;
  try{cv.setPointerCapture(e.pointerId);}catch(_){}});
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.clientX,sy:e.clientY};
@@ -445,8 +445,8 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
 const endJoy=e=>{
  // короткое касание без движения — включить/выключить фонарик
- for(const o of [joy,aimJoy])if(o&&o.id===e.pointerId&&o.touch&&!o.used&&e.type==='pointerup'&&performance.now()-o.t0<230&&(o.maxD||0)<10&&running&&G&&P&&active(P)&&!G.sc){o.used=true;toggleFlash();}
- if(joy&&joy.id===e.pointerId){const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy);joyGhost=joy.touch&&e.type==='pointerup'&&d>18?{dx,dy,t:performance.now(),armed:joy.armed,run:d>33}:null;joy=null;}if(aimJoy&&aimJoy.id===e.pointerId)aimJoy=null;};
+ for(const o of [joy,aimJoy])if(o&&o.id===e.pointerId&&o.touch&&!o.used&&e.type==='pointerup'&&performance.now()-o.t0<320&&(o.maxD||0)<16&&running&&G&&P&&active(P)&&!G.sc){o.used=true;toggleFlash();}
+ if(joy&&joy.id===e.pointerId){const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy);joyGhost=joy.touch&&d>18?{dx,dy,t:performance.now(),armed:joy.armed,run:d>33}:null;joy=null;}if(aimJoy&&aimJoy.id===e.pointerId)aimJoy=null;};
 for(const ev of['pointerup','pointercancel'])addEventListener(ev,endJoy,true);
 cv.addEventListener('lostpointercapture',endJoy);
 addEventListener('touchend',e=>{if(!e.touches||e.touches.length===0){joy=null;aimJoy=null;}},true);
@@ -457,7 +457,7 @@ $('throw').addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefau
 function getInput(){let x=0,y=0,run=false;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  const m=Math.hypot(x,y);if(m){x/=m;y/=m;}run=!(keys.ControlLeft||keys.ControlRight);
- const gh=!joy&&joyGhost&&joyGhost.run&&performance.now()-joyGhost.t<260?joyGhost:null;
+ const gh=!joy&&joyGhost&&joyGhost.run&&performance.now()-joyGhost.t<400?joyGhost:null;
  let turn=null;if(joy||gh){const dx=gh?gh.dx:joy.x-joy.ox,dy=gh?gh.dy:joy.y-joy.oy,d=Math.hypot(dx,dy),R=60,tc=gh?true:joy.touch;if(tc&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(tc?18:8)){const k=Math.min(1,d/R);x=dx/d*k;y=dy/d*k;run=d>R*0.55;}}
  return{x,y,run,turn};}
 function rectDist(px,py,r){const cx=clamp(px,r.x,r.x+r.w),cy=clamp(py,r.y,r.y+r.h);return Math.hypot(px-cx,py-cy);}
