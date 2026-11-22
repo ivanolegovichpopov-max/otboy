@@ -866,14 +866,21 @@ function shade(hex,a){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b
 let props=[];
 function wallH(o){return o.kind==='wall'?(o.b&&o.b.hK!=null?16+(WALLH-16)*o.b.hK:WALLH):o.kind==='low'?LOWH:o.kind==='drop'?14:FENCEH;}
 function drawBlock(o,cy,ch,last){const H=wallH(o),st=STY[o.kind]||STY.wall,cut=o.kind==='wall'&&H<40;
- if(st.picket&&o.h>o.w){ // вертикальный забор: ряд столбиков, а не сплошная полоса
-  const x=o.x-2,w=o.w+4,by=cy+ch,odd=Math.round(cy/24)%2,sh=H*0.6;
-  ctx.fillStyle='rgba(0,0,0,.24)';ctx.beginPath();ctx.moveTo(x+w,cy);ctx.lineTo(x+w+sh,cy+sh*0.3);ctx.lineTo(x+w+sh,by+sh*0.3);ctx.lineTo(x+w,by);ctx.fill();
-  ctx.fillStyle=st.line;ctx.fillRect(x+w/2-2.5,cy-H*0.74,5,ch+2);ctx.fillRect(x+w/2-2.5,cy-H*0.3,5,ch+2);
-  ctx.fillStyle=odd?st.front:shade(st.front,0.12);ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by-H+5);ctx.lineTo(x+w/2,by-H-3);ctx.lineTo(x+w,by-H+5);ctx.lineTo(x+w,by);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='#140d08';ctx.lineWidth=1.5;ctx.stroke();
-  ctx.fillStyle=shade(st.cap,0.2);ctx.beginPath();ctx.moveTo(x+1.5,by-H+5.5);ctx.lineTo(x+w/2,by-H-1.5);ctx.lineTo(x+w-1.5,by-H+5.5);ctx.lineTo(x+w/2,by-H+3);ctx.closePath();ctx.fill();
-  ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(x,by-4,w,4);return;}
+ if(st.picket&&o.h>o.w){const cx=o.x+o.w/2,by=cy+ch,sh=H*0.55;
+  if(o.kind!=='low'){ // глухой дощатый забор: видим его верхнюю кромку и торец
+   ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.moveTo(o.x+o.w,cy);ctx.lineTo(o.x+o.w+sh,cy+sh*0.28);ctx.lineTo(o.x+o.w+sh,by+sh*0.28);ctx.lineTo(o.x+o.w,by);ctx.fill();
+   ctx.fillStyle=st.front;ctx.fillRect(o.x,cy-H,o.w,ch);ctx.fillStyle=shade(st.cap,0.12);ctx.fillRect(o.x,cy-H,5,ch);ctx.fillStyle=shade(st.front,-0.35);ctx.fillRect(o.x+o.w-4,cy-H,4,ch);
+   ctx.strokeStyle=st.line;ctx.lineWidth=1.5;for(let y=cy;y<by;y+=12){ctx.beginPath();ctx.moveTo(o.x+5,y-H);ctx.lineTo(o.x+o.w-4,y-H);ctx.stroke();}
+   if(last){ctx.fillStyle=shade(st.front,-0.15);ctx.fillRect(o.x,by-H,o.w,H);ctx.strokeStyle=st.line;for(let k=o.x+7;k<o.x+o.w;k+=7){ctx.beginPath();ctx.moveTo(k,by-H);ctx.lineTo(k,by);ctx.stroke();}}
+   return;}
+  // низкий заборчик: столбики и две перекладины
+  const n=Math.round((cy-o.y)/24),isPost=last||n%2===1;
+  ctx.strokeStyle='rgba(0,0,0,.22)';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx+sh*0.8,cy+sh*0.25);ctx.lineTo(cx+sh*0.8,by+sh*0.25);ctx.moveTo(cx+sh*0.4,cy+sh*0.12);ctx.lineTo(cx+sh*0.4,by+sh*0.12);ctx.stroke();
+  ctx.fillStyle=shade(st.front,-0.25);ctx.fillRect(cx-2,cy-H*0.42,4,ch+1);ctx.fillStyle=shade(st.cap,0.1);ctx.fillRect(cx-2.5,cy-H*0.85,5,ch+1);ctx.fillStyle=shade(st.front,-0.4);ctx.fillRect(cx+1.5,cy-H*0.85,1,ch+1);
+  const post=y=>{const w=11;ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.moveTo(cx-w/2,y);ctx.lineTo(cx+w/2,y);ctx.lineTo(cx+w/2+sh,y+sh*0.28);ctx.lineTo(cx-w/2+sh,y+sh*0.28);ctx.fill();
+   ctx.fillStyle=st.front;ctx.fillRect(cx-w/2,y-H-4,w,H+4);ctx.fillStyle=shade(st.cap,0.1);ctx.fillRect(cx-w/2,y-H-4,w*0.45,H+4);ctx.strokeStyle='#140d08';ctx.lineWidth=1.3;ctx.strokeRect(cx-w/2,y-H-4,w,H+4);
+   ctx.fillStyle=shade(st.cap,0.32);ctx.fillRect(cx-w/2-1.5,y-H-8,w+3,5);ctx.strokeRect(cx-w/2-1.5,y-H-8,w+3,5);};
+  if(cy===o.y)post(cy+5);if(isPost)post(by);return;}
  // тень на земле
  if(o.kind!=='wall'&&last){ctx.fillStyle='rgba(0,0,0,.22)';ctx.fillRect(o.x+4,cy+ch,o.w+H*0.4,5);}
  // крышка стены
@@ -1135,7 +1142,6 @@ function drawDark(T){
  const fl=0.92+Math.sin(G.t*13)*0.03;
  for(const l of lamps){const r=(l.gate&&G.powerOn)?340:l.r,kn=(Math.hypot(K.x-l.x,K.y-l.y)<180&&Math.random()<0.25?0.45:1)*(G.dimT>0&&Math.random()<0.6?0.25:1);glow(l.x,l.y,r,((l.gate&&!G.powerOn)?0.5:0.88*fl)*kn);}
  for(const b of G.bursts){const k=b.t/b.dur;glow(b.x,b.y,b.r*(1.2+k),0.95*(1-k));}
- for(const b of buildings)for(const d of b.doors){const q=porchRect(d);glow(q[0]+q[2]/2,q[1]+q[3]/2,84,0.5*fl);}
  for(const g of G.gens){if(g.done)glow(g.x,g.y,260,0.8);else if(g.spark>0)glow(g.x,g.y,70+(g.boom||0)*150,0.6+(g.boom||0)*0.35);}
  for(const b of buildings){b.lit=0;b.litK=0;}
  const roofOf=s=>{for(const b of buildings)if(s.x>b.x&&s.x<b.x+b.w&&s.y>b.y&&s.y<b.y+b.h)return b.alpha>0.5?b:null;return null;};
@@ -1152,6 +1158,9 @@ function drawDark(T){
  for(const w of winAll)if(w.b.lit>0&&!w.on){glow(w.x,w.y,40,0.6*w.b.lit);glow(w.x,w.gy,60,0.3*w.b.lit);}
  {const f=0.75+Math.sin(G.t*9)*0.12+Math.sin(G.t*23)*0.08;glow(1560,1466,150*f,0.8);}
  for(const b of buildings)for(const d of b.doors){const [x,y,w,hh]=porchRect(d);glow(x+w/2,y+hh/2,85,0.55);}
+ // крыши: фонарики и лампы светят по земле, а не по кровле
+ {const base=0.94-0.42*(G.litK||0),rd=Math.min(base,0.83);for(const b of buildings){if(b.alpha<0.03||offView(b.x+b.w/2,b.y+b.h/2-WALLH/2,Math.max(b.w,b.h)))continue;const x=b.x-10,y=b.y-WALLH-10,w=b.w+20,h=b.h+22;
+  dctx.globalCompositeOperation='destination-out';dctx.fillStyle='rgba(0,0,0,'+b.alpha+')';dctx.fillRect(x,y,w,h);dctx.globalCompositeOperation='source-over';dctx.fillStyle='rgba(3,6,16,'+(rd*b.alpha)+')';dctx.fillRect(x,y,w,h);}}
  dctx.setTransform(1,0,0,1,0,0);dctx.globalCompositeOperation='source-over';
  ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(dark,0,0,cv.width,cv.height);
 }
@@ -1204,11 +1213,14 @@ function interactables(){const L=[];
  return L;}
 function drawOverlayWorld(T){
  ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);
- if(!(G.litK>0.5)){const c=camTarget(),R=270;ctx.lineWidth=1.6;ctx.lineJoin='round';
-  for(const o of rects){if(o.kind==='gen'||o.kind==='gate'||o.open)continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h),dd=Math.hypot(c.x-qx,c.y-qy);if(dd>R)continue;
-   const H=wallH(o),f=1-dd/R;if(o.kind==='wall'){ctx.fillStyle='rgba(176,196,230,'+(0.13*f)+')';ctx.fillRect(o.x,o.y-H,o.w,o.h);}ctx.strokeStyle='rgba(176,196,230,'+((o.kind==='wall'?0.5:0.34)*f)+')';ctx.strokeRect(o.x,o.y-H,o.w,o.h+H);}
-  for(const b of buildings){if(b.alpha<=0.5)continue;const qx=clamp(c.x,b.x,b.x+b.w),qy=clamp(c.y,b.y,b.y+b.h),dd=Math.hypot(c.x-qx,c.y-qy);if(dd>R)continue;const a=0.36*(1-dd/R)*b.alpha;
-   ctx.strokeStyle='rgba(176,196,230,'+a+')';ctx.strokeRect(b.x-10,b.y-WALLH-10,b.w+20,b.h+22);ctx.beginPath();ctx.moveTo(b.x,b.y+b.h);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.stroke();}}
+ if(!(G.litK>0.5)){const c=camTarget(),R=250,gr=ctx.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R),gf=ctx.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R);
+  gr.addColorStop(0,'rgba(176,196,230,.5)');gr.addColorStop(1,'rgba(176,196,230,0)');gf.addColorStop(0,'rgba(176,196,230,.14)');gf.addColorStop(1,'rgba(176,196,230,0)');ctx.lineWidth=1.6;ctx.lineJoin='round';ctx.strokeStyle=gr;ctx.fillStyle=gf;
+  for(const o of rects){if(o.kind!=='wall'&&o.kind!=='drop')continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;
+   const H=wallH(o);if(o.kind==='wall')ctx.fillRect(o.x,o.y-H,o.w,o.h);ctx.strokeRect(o.x,o.y-H,o.w,o.h+H);}
+  for(const o of rects){if(o.kind!=='fence'&&o.kind!=='low')continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;const H=wallH(o);ctx.beginPath();
+   if(o.h>o.w){const x=o.x+o.w/2;ctx.moveTo(x-6,o.y-H);ctx.lineTo(x-6,o.y+o.h-H);ctx.moveTo(x+6,o.y-H);ctx.lineTo(x+6,o.y+o.h-H);}else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
+  for(const b of buildings){if(b.alpha<=0.5)continue;const qx=clamp(c.x,b.x,b.x+b.w),qy=clamp(c.y,b.y,b.y+b.h);if(Math.hypot(c.x-qx,c.y-qy)>R+60)continue;ctx.globalAlpha=b.alpha;
+   ctx.strokeRect(b.x-10,b.y-WALLH-10,b.w+20,b.h+22);ctx.beginPath();ctx.moveTo(b.x,b.y+b.h);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.stroke();ctx.globalAlpha=1;}}
  ctx.globalCompositeOperation='lighter';
  for(const b of G.bursts){const k=b.t/b.dur,e=1-(1-k)*(1-k),a=1-k,c='rgba('+b.col+',';warm(b.x,b.y,b.r*(0.35+0.75*e),0.85*a,c);warm(b.x,b.y,b.r*0.4*(1-k*0.6),a,'rgba(255,255,240,');
   ctx.strokeStyle=c+a+')';ctx.lineCap='round';for(let i=0;i<b.rays;i++){const an=b.rot+i*Math.PI*2/b.rays+(i%2)*0.2,r0=b.r*(0.15+0.5*e),r1=b.r*(0.5+0.9*e)*(i%2?0.7:1);ctx.lineWidth=(i%2?2.5:4.5)*a+0.5;ctx.beginPath();ctx.moveTo(b.x+Math.cos(an)*r0,b.y+Math.sin(an)*r0*0.8);ctx.lineTo(b.x+Math.cos(an)*r1,b.y+Math.sin(an)*r1*0.8);ctx.stroke();}
@@ -1219,8 +1231,10 @@ function drawOverlayWorld(T){
  for(const g of G.gens)if(g.boom>0){warm(g.x,g.y-20,90+140*(1-g.boom),0.55*g.boom,'rgba(255,140,50,');warm(g.x,g.y-24,40,0.8*g.boom,'rgba(255,240,200,');}
  for(const q of G.fx){if(q.type!=='spark')continue;const k=q.life/q.max;ctx.strokeStyle='rgba(255,'+(200+Math.random()*55|0)+',120,'+k+')';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(q.x,q.y-q.z);ctx.lineTo(q.x-q.vx*0.03,q.y-q.z-q.vy*0.03+q.vz*0.03);ctx.stroke();warm(q.x,q.y-q.z,10,0.25*k,'rgba(255,200,110,');}
  for(const r of G.rings){const k=r.t/r.dur;ctx.globalAlpha=1-k;ctx.strokeStyle=r.col;ctx.lineWidth=3*(1-k)+1;ctx.setLineDash([6,5]);ctx.beginPath();ctx.ellipse(r.x,r.y,r.max*k,r.max*k*0.6,0,0,7);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;}
+ ctx.save();ctx.beginPath();ctx.rect(camX-3000,camY-3000,6000,6000);for(const b of buildings)if(b.alpha>0.5)ctx.rect(b.x-10,b.y-WALLH-10,b.w+20,b.h+22);ctx.clip('evenodd');
  if(K._poly){const v=Math.min(1,K.vis||0),fl=(0.85+Math.sin(G.t*11)*0.08)*v,g=ctx.createRadialGradient(K.x,K.y,6,K.x,K.y,340);g.addColorStop(0,'rgba(255,160,70,'+(0.2*fl)+')');g.addColorStop(1,'rgba(255,160,70,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(K.x,K.y);for(const [px,py] of K._poly)ctx.lineTo(px,py);ctx.closePath();ctx.fill();warm(K.x,K.y,70,0.12*fl,'rgba(255,160,70,');}
  for(const s of S){if(!s.flash||!s._poly||!(active(s))||s.hidden)continue;const len=s.isPlayer?330:230,g=ctx.createRadialGradient(s.x,s.y,6,s.x,s.y,len);g.addColorStop(0,'rgba(255,235,180,.16)');g.addColorStop(1,'rgba(255,235,180,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(s.x,s.y);for(const [px,py] of s._poly)ctx.lineTo(px,py);ctx.closePath();ctx.fill();}
+ ctx.restore();
  {const t=G.t;for(const w of winAll){if(!(w.b.lit>0)||w.on)continue;const fl=(0.75+Math.sin(t*9+w.x)*0.15+(Math.random()<0.05?-0.3:0))*w.b.lit,c=w.b.litK?'rgba(255,150,60,':'rgba(255,240,190,';warm(w.x,w.y,30,0.3*fl,c);warm(w.x,w.gy,55,0.1*fl,c);}
   for(const w of windowsLit){const fl=0.8+Math.sin(t*5+w.x)*0.1;warm(w.x,w.y,34,0.22*fl,'rgba(255,175,90,');warm(w.x,w.gy,60,0.08,'rgba(255,175,90,');}
   const ff=0.75+Math.sin(t*9)*0.12;warm(1560,1462,160,0.13*ff,'rgba(255,140,60,');
