@@ -441,7 +441,7 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.
   if(joy.touch&&running&&G&&P&&active(P)){if(d>150&&joy.armed){joy.armed=false;burst(P);}else if(d<95)joy.armed=true;
    // «нырок»: на ходу быстро вернул палец в центр и снова оттянул — фонарик, движение не прерывается
    const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;
-   if(joy.dip){if(now-joy.dip.t>380)joy.dip=null;else if(d>=joy.dip.th){joy.dip=null;joy.used=true;if(!G.sc)toggleFlash();}}
+   if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;if(now-q.t>380)joy.dip=null;else if(d>14&&cs<0.3)joy.dip=null; /* палец ушёл в другую сторону — это разворот, не нырок */ else if(d>=q.th){joy.dip=null;joy.used=true;if(!G.sc)toggleFlash();}}
    else if(d<25){const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=d<13&&joy.ovW&&now-joy.ovW.t<320?joy.ovW:null,v=r||w;if(v){joy.dip={dx:v.dx,dy:v.dy,t:now,th:r?33:18};joy.ovR=joy.ovW=null;}}
    if(!joy.dip){if(d>=33)joy.ovR={dx,dy,t:now};else if(d>18)joy.ovW={dx,dy,t:now};}}}
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
