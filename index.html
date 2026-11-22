@@ -62,9 +62,9 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
     <b>Ремонт:</b> встань у щитка и не двигайся. Появится круг со стрелкой — нажми, когда она в жёлтой зоне. Промах — взрыв, и охотник идёт на шум.<br>
     <b>Прятки:</b> свет и фонарик выдают тебя, кусты и стены прячут. В шкафчик или ящик — встань и замри. В темноте ты медленнее.<br>
     <b>Охотник:</b> первый удар ранит, второй — уносит в кладовку. Постой у кладовки, чтобы выпустить пойманного. Третья кладовка — выбываешь.<br>
-    <b>Защита:</b> урони щит перед охотником, посвети ему фонариком в лицо, брось мяч для отвлечения. Батарейки — редкость.<br>
+    <b>Защита:</b> перепрыгни заборчик, посвети охотнику фонариком в лицо, брось мяч для отвлечения. Батарейки — редкость.<br>
     <b>ПК:</b> WASD — бег, Ctrl — тихий шаг, мышь — куда светить, Shift — рывок, F — фонарик, Пробел — действие.<br>
-    <b>Телефон:</b> палец слева — бег (чуть-чуть — тихий шаг), палец справа — куда светить, 💨 — рывок, 🔦 — фонарик, ✋ / 🏐 — щит или мяч.
+    <b>Телефон:</b> палец слева — бег (чуть-чуть — тихий шаг), палец справа — куда светить, 💨 — рывок, 🔦 — фонарик, 🏐 — бросить мяч.
   </div>
 </div>
 
@@ -77,7 +77,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 
 <script>
 'use strict';
-const SRV=typeof __SRV!=='undefined',VER='s2',SRV_URL='wss://otboy-server.onrender.com';
+const SRV=typeof __SRV!=='undefined',VER='s3',SRV_URL='wss://otboy-server.onrender.com';
 const $=id=>document.getElementById(id);
 const cv=$('c'),ctx=cv.getContext('2d');
 const dark=document.createElement('canvas'),dctx=dark.getContext('2d');
@@ -385,7 +385,7 @@ function newGame(LY){
   gates:[{rect:gateN,open:false,ex:1200,ey:4,north:true},{rect:gateS,open:false,ex:1200,ey:WH-4,north:false}],
   levers:[{x:1090,y:62,p:0,gi:0},{x:1090,y:WH-62,p:0,gi:1}],
   traps:[],
-  drops:(LY?LY.drops:[[304,404,92,12],[544,794,12,92],[544,1374,12,92],[1064,504,92,12],[1044,1234,92,12],[1634,274,12,92],[560,580,60,12]].sort(()=>Math.random()-0.5).slice(0,5)).map(([x,y,w,hh])=>({x,y,w,h:hh,cx:x+w/2,cy:y+hh/2,state:'up',rect:null,breakT:0,fall:0}))};
+  drops:[]};
  G.gens.forEach(g=>addR(g.x-15,g.y-11,30,22,'gen'));
 
  const sp=LY?LY.sp:pickSpread(CAND.spawns,4,280);
@@ -596,7 +596,7 @@ function boom(x,y,o){o=o||{};const pw=o.p||1,c=camTarget(),d=Math.hypot(c.x-x,c.
 function stars(x,y,n,c,o){o=o||{};fxAdd('star',x,y,n,{v:o.v||190,vz:o.vz||220,life:o.life||0.9,g:o.g==null?420:o.g,r:o.r||3,c});}
 function floatTxt(x,y,txt,c,s){(G.floats=G.floats||[]).push({x:x+(Math.random()-0.5)*10,y,t:1.3,T:1.3,txt,c,s,rot:(Math.random()-0.5)*0.25});}
 function puffs(x,y,n,a){for(let k=0;k<n;k++){const b=(a==null?Math.random()*7:a+(Math.random()-.5)*1.6),v=60+Math.random()*140;G.puffs.push({x,y,vx:Math.cos(b)*v,vy:Math.sin(b)*v*0.6,z:20+Math.random()*16,vz:60+Math.random()*90,life:1+Math.random()*0.7,r:2.5+Math.random()*3.5,c:Math.random()<0.25?'#c8372d':Math.random()<0.5?'#f4efe2':'#e6dcc6'});}}
-function blindKiller(s){boom(K.x,K.y-46,{r:120,col:'255,250,225',snd:0.25,rays:16,shake:0.25,zoom:0.04,dur:0.5});stars(K.x,K.y-50,12,'255,255,235',{v:200,vz:260});floatTxt(K.x,K.y-104,'Ослеплён!','#fff6d0',28);K.blindT=3;K.lunge=null;K.windup=null;K.wipe=0;sfx('blind');ring(K.x,K.y,70,'#fff6d0',0.6);if(s.isPlayer)vib([30,30,60]);s.st.blind=(s.st.blind||0)+1;
+function blindKiller(s){boom(K.x,K.y-46,{r:120,col:'255,250,225',snd:0.25,rays:16,shake:0.25,zoom:0.04,dur:0.5});stars(K.x,K.y-50,12,'255,255,235',{v:200,vz:260});floatTxt(K.x,K.y-104,'Ослеплён!','#fff6d0',28);K.blindT=3;K.lunge=null;K.windup=null;K.wipe=0;sfx('blind');ring(K.x,K.y,70,'#fff6d0',0.6);if(s.isPlayer)vib([30,30,60]);s.st.blind=(s.st.blind||0)+1;s.st.stun++;
  if(K.carry){const c=K.carry;K.carry=null;K.closet=null;c.state='injured';c.boost=1.6;c.wig=0;c.x=K.x+(K.flip?-28:28);c.y=K.y+10;collide(c);puffs(c.x,c.y,10);sfx('free');}
  K.last={x:s.x,y:s.y};K.state='blind';}
 function hit(t){boom(t.x,t.y-24,{r:t.state==='ok'?75:100,col:'255,235,215',rays:10,shake:t.state==='ok'?0.4:0.6,zoom:0.06,dur:0.32,fl:t.isPlayer?0:0.35});if(t.isPlayer){screenFlash('255,255,255',0.8,true);flashT=t.state==='ok'?0.3:0.42;}stars(t.x,t.y-24,t.state==='ok'?10:16,'255,90,70',{v:240,vz:240});floatTxt(t.x,t.y-70,t.state==='ok'?'БАЦ!':'ХРЯСЬ!','#ff6a4a',t.state==='ok'?28:34);if(t.isPlayer){dmgT=1;zoomKick=Math.max(zoomKick,0.09);}if(t.isPlayer)vib(t.state==='ok'?[80,40,140]:[200,60,200]);ring(t.x,t.y,55,'#d0503e',0.45);const a=K.lunge?K.lunge.a:Math.atan2(t.y-K.y,t.x-K.x);K.lunge=null;K.windup=null;hitStop=0.13;puffs(t.x,t.y,t.state==='ok'?12:22,a);
@@ -1530,7 +1530,7 @@ function bgTick(){if(!document.hidden){bgLast=0;return;}if(!running||!G)return;c
 function showEnd(){running=false;musicStop();sfx(P.state==='escaped'?'endwin':'endlose');const esc=S.filter(s=>s.state==='escaped').length;
  const pts=Math.round(P.st.rep*100+P.st.res*150+(P.state==='escaped'?500:0)+P.st.dodge*50+P.st.stun*100);
  const rows=S.map(s=>'<tr'+(s.isPlayer?' class="me"':'')+'><td>'+s.name+'</td><td>'+(s.state==='escaped'?'сбежал':s.state==='out'?'выбыл':'остался')+'</td><td>'+s.st.rep.toFixed(1)+'</td><td>'+s.st.res+'</td><td>'+s.st.dodge+'</td><td>'+s.st.stun+'</td></tr>').join('');
- $('endStats').innerHTML='Жертв сбежало: <b>'+esc+' из 4</b> · Щитков: <b>'+Math.min(G.done,7)+'</b><table class="tb"><tr><th></th><th></th><th>щитки</th><th>спас</th><th>увороты</th><th>оглушил</th></tr>'+rows+'</table><div class="pts">Твои очки: <b>'+pts+'</b></div>';
+ $('endStats').innerHTML='Жертв сбежало: <b>'+esc+' из 4</b> · Щитков: <b>'+Math.min(G.done,7)+'</b><table class="tb"><tr><th></th><th></th><th>щитки</th><th>спас</th><th>увороты</th><th>ослепил</th></tr>'+rows+'</table><div class="pts">Твои очки: <b>'+pts+'</b></div>';
  $('endTitle').textContent=P.state==='escaped'?'Ты сбежал из лагеря!':'Охотник тебя не выпустил';$('end').classList.remove('hidden');return;
  $('endTitle').textContent=P.state==='escaped'?'Ты сбежал из лагеря!':'Охотник тебя не выпустил';
  $('endStats').innerHTML='Сбежали: <b>'+esc+' из 4</b><br>Щитков починено: <b>'+Math.min(G.done,7)+'</b><br>Твои очки: <b>'+Math.round(P.score)+'</b>';
