@@ -1435,11 +1435,11 @@ function drawHUD(){
  if(joy){ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(245,235,210,.4)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,60,0,7);ctx.stroke();if(joy.touch&&P&&active(P)){const rdy=!(P.burstCd>0);ctx.setLineDash([2,7]);ctx.strokeStyle=rdy?'rgba(140,190,255,.55)':'rgba(140,190,255,.15)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(joy.ox,joy.oy,150,0,7);ctx.stroke();ctx.strokeStyle='rgba(245,235,210,.22)';ctx.setLineDash([]);ctx.lineWidth=1;ctx.beginPath();ctx.arc(joy.ox,joy.oy,18,0,7);ctx.stroke();}ctx.setLineDash([]);const dx=joy.x-joy.ox,dy=joy.y-joy.oy,d=Math.hypot(dx,dy),k=d>60?60/d:1;feltDisc(joy.ox+dx*k,joy.oy+dy*k,22,'rgba(195,154,46,.55)',1);}
 }
 function msg(t){tbox(t,botCx(),VH-28,Math.min(botW(),400),17,'#f0b0a0',1);}
-let lastBtn='';
+let lastBtn='',camLX=0,camLY=0;
 function draw(){
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);
  if(!G)return;
- if(G.intro>0){const f=1-G.intro/3.8,tg=f<0.4?K:P;camX+=(tg.x-camX)*(f<0.4?0.2:0.035);camY+=(tg.y-camY)*(f<0.4?0.2:0.035);}else{const ct=camTarget(),la=ct===P&&active(P)?28:0;camX+=(ct.x+Math.cos(P.look??P.face)*la-camX)*0.1;camY+=(ct.y+Math.sin(P.look??P.face)*la-camY)*0.1;}
+ if(G.intro>0){const f=1-G.intro/3.8,tg=f<0.4?K:P;camX+=(tg.x-camX)*(f<0.4?0.2:0.035);camY+=(tg.y-camY)*(f<0.4?0.2:0.035);}else{const ct=camTarget(),on=ct===P&&active(P)&&!P.hidden,lk=P.look??P.face,tx=on?Math.cos(lk)*0.44*VW/2/SC:0,ty=on?Math.sin(lk)*0.36*VH/2/SC:0;camLX+=(tx-camLX)*0.07;camLY+=(ty-camLY)*0.07;camX+=(ct.x+camLX-camX)*0.14;camY+=(ct.y+camLY-camY)*0.14;}
  let shx=0,shy=0;{const ct2=camTarget(),kd2=ct2===K?999:dist(ct2,K);let amp=0;if(K.state==='chase'&&K.target===P&&kd2<220)amp=(1-kd2/220)*2.2;if(K.lunge&&kd2<200)amp+=2;if(shakeT>0){amp+=6*shakeT;shakeT=Math.max(0,shakeT-0.016);}shx=(Math.random()-0.5)*amp;shy=(Math.random()-0.5)*amp;}
  const T=[DPR*SC,0,0,DPR*SC,DPR*(VW/2-(camX+shx)*SC),DPR*(VH/2-(camY+shy)*SC)];
  ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);
