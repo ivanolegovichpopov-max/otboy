@@ -440,12 +440,12 @@ cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mouseAim={sx:e.
   // палец ушёл далеко за внешний круг — рывок (срабатывает один раз, пока палец не вернётся ближе)
   if(joy.touch&&running&&G&&P&&active(P)){if(d>150&&joy.armed){joy.armed=false;burst(P);}else if(d<95)joy.armed=true;
    // «нырок»: на ходу быстро вернул палец в центр и снова оттянул — фонарик, движение не прерывается
-   const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(!joy.hs)joy.hs=[];joy.hs.push([now,d]);while(joy.hs.length>1&&now-joy.hs[1][0]>200)joy.hs.shift();
-   if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;if(now-q.t>380)dipEnd(joy);else if(d>14&&cs<0.3)dipEnd(joy); /* палец ушёл в другую сторону — это разворот, не нырок */ else if(d>=q.th){dipEnd(joy);joy.used=true;if(!G.sc)toggleFlash();}}
-   else{// нырок = быстрый рывок пальца назад к центру (не меньше 16px за 0,2 с) и возврат; место не важно
+   const now=performance.now(),dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(!joy.hs)joy.hs=[];joy.hs.push([now,d]);while(joy.hs.length>1&&now-joy.hs[1][0]>230)joy.hs.shift();
+   if(joy.dip){const q=joy.dip,cs=d>0?(dx*q.dx+dy*q.dy)/(d*Math.hypot(q.dx,q.dy)):1;q.min=Math.min(q.min??d,d);if(now-q.t>480)dipEnd(joy);else if(d>14&&cs<0.2)dipEnd(joy); /* палец ушёл в другую сторону — это разворот, не нырок */ else if(q.th!=null?d>=q.th:d>=q.min+6){dipEnd(joy);joy.used=true;joy.dipT=now;if(!G.sc)toggleFlash();}}
+   else{// нырок = рывок пальца назад к центру (от 11px за ~0,2 с) и любое движение обратно (от 6px); место и сила не важны
     let pk=0;for(const h of joy.hs)pk=Math.max(pk,h[1]);
     const r=joy.ovR&&now-joy.ovR.t<320?joy.ovR:null,w=joy.ovW&&now-joy.ovW.t<320?joy.ovW:null;
-    if(r&&pk>=33&&pk-d>=16){joy.dip={dx:r.dx,dy:r.dy,t:now,th:Math.max(33,pk-6)};joy.ovR=joy.ovW=null;joy.hs=[];}
+    if(r&&pk>=33&&pk-d>=11&&now-(joy.dipT||0)>250){joy.dip={dx:r.dx,dy:r.dy,t:now,min:d};joy.ovR=joy.ovW=null;joy.hs=[];}
     else if(!r&&w&&d<13){joy.dip={dx:w.dx,dy:w.dy,t:now,th:18};joy.ovR=joy.ovW=null;joy.hs=[];}}
    if(!joy.dip){if(d>=33)joy.ovR={dx,dy,t:now};else if(d>18)joy.ovW={dx,dy,t:now};}}}
  if(aimJoy&&aimJoy.id===e.pointerId){aimJoy.x=e.clientX;aimJoy.y=e.clientY;}});
@@ -466,7 +466,9 @@ const dipEnd=j=>{j.dip=null;j.hs=[];};
 function getInput(){let x=0,y=0,run=false;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  const m=Math.hypot(x,y);if(m){x/=m;y/=m;}run=!(keys.ControlLeft||keys.ControlRight);
- if(joy&&joy.dip&&performance.now()-joy.dip.t>380)dipEnd(joy);const dp=joy&&joy.dip;
+ if(joy&&joy.dip){const t=performance.now()-joy.dip.t,c=Math.hypot(joy.x-joy.ox,joy.y-joy.oy);if(t>480||(c<13&&t>220))dipEnd(joy);}
+ else if(joy&&joy.touch){const dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(Math.hypot(dx,dy)>=33)joy.ovR={dx,dy,t:performance.now()};} // палец держат неподвижно — направление бега всё равно «свежее»
+ const dp=joy&&joy.dip;
  let turn=null;if(joy){let dx=joy.x-joy.ox,dy=joy.y-joy.oy;if(dp){const m=Math.hypot(dp.dx,dp.dy),c=Math.hypot(dx,dy);if(c>14){dx=dx/c*m;dy=dy/c*m;}else{dx=dp.dx;dy=dp.dy;}} // во время нырка скорость прежняя, а направление — за пальцем
   const d=Math.hypot(dx,dy),R=60;if(joy.touch&&d>7&&d<=18){turn=Math.atan2(dy,dx);x=0;y=0;}else if(d>(joy.touch?18:8)){const k=Math.min(1,d/R);x=dx/d*k;y=dy/d*k;run=d>R*0.55;}}
  return{x,y,run,turn};}
