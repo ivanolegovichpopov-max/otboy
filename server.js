@@ -45,7 +45,8 @@ const send = (ws, o) => { if (ws.readyState === 1) ws.send(typeof o === 'string'
 const cast = (room, o) => { const s = JSON.stringify(o); for (const c of room.clients) send(c, s); };
 const live = room => room.running && !room.api.over();
 const cleanName = (n, slot) => { n = typeof n === 'string' ? n.replace(/[\u0000-\u001f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 12) : ''; return n || 'Игрок ' + (slot + 1); };
-const castRoom = room => { const pl = [...room.clients].map(c => ({ i: c.slot, name: c.name })).sort((a, b) => a.i - b.i);
+const cleanLook = l => (typeof l === 'string' && /^\d{7}$/.test(l)) ? l : '';
+const castRoom = room => { const pl = [...room.clients].map(c => ({ i: c.slot, name: c.name, look: c.look || '' })).sort((a, b) => a.i - b.i);
   for (const c of room.clients) send(c, { t: 'room', code: room.code, n: pl.length, run: live(room) ? 1 : 0, pl, you: c.slot }); };
 
 function newCode() { for (let i = 0; i < 200; i++) { const c = String(1000 + Math.floor(Math.random() * 9000)); if (!rooms.has(c)) return c; } return null; }
@@ -63,13 +64,13 @@ function leave(ws) {
   if (room.clients.size) castRoom(room); else room.emptyAt = Date.now();
 }
 function startRoom(room) {
-  const L = room.api.start([...room.clients].map(c => ({ i: c.slot, name: c.name })));
+  const L = room.api.start([...room.clients].map(c => ({ i: c.slot, name: c.name, look: c.look || '' })));
   for (const c of room.clients) c.inGame = true;
   room.running = true; room.last = performance.now(); room.acc = 0; room.overT = 0;
   for (const c of room.clients) send(c, { t: 'init', L, i: c.slot });
   castRoom(room);
 }
-function enter(ws, room) { ws.inGame = true; room.api.claim(ws.slot, ws.name); send(ws, { t: 'init', L: room.api.layout(), i: ws.slot }); }
+function enter(ws, room) { ws.inGame = true; room.api.claim(ws.slot, ws.name, ws.look || ''); send(ws, { t: 'init', L: room.api.layout(), i: ws.slot }); }
 
 function onMsg(ws, m) {
   if (!m || typeof m.t !== 'string') return;
@@ -88,7 +89,7 @@ function onMsg(ws, m) {
     }
     const slot = freeSlot(room, m.slot);
     if (slot < 0) return send(ws, { t: 'err', m: 'В комнате уже 4 игрока' });
-    ws.room = room; ws.slot = slot; ws.name = cleanName(m.name, slot); ws.inGame = false; room.clients.add(ws); room.emptyAt = 0;
+    ws.room = room; ws.slot = slot; ws.name = cleanName(m.name, slot); ws.look = cleanLook(m.look); ws.inGame = false; room.clients.add(ws); room.emptyAt = 0;
     castRoom(room);
     if (m.re && live(room)) enter(ws, room);
     return;
@@ -96,7 +97,7 @@ function onMsg(ws, m) {
   const room = ws.room; if (!room) return;
   if (m.t === 'start') { if (!live(room)) startRoom(room); else enter(ws, room); }
   else if (m.t === 'leave') leave(ws);
-  else if (m.t === 'name') { ws.name = cleanName(m.name, ws.slot); castRoom(room); }
+  else if (m.t === 'name') { ws.name = cleanName(m.name, ws.slot); if (m.look !== undefined) { ws.look = cleanLook(m.look); if (ws.inGame && ws.look) room.api.claim(ws.slot, ws.name, ws.look); } castRoom(room); }
   else if (!room.running || !ws.inGame) return;
   else if (m.t === 'i') room.api.input(ws.slot, m);
   else if (m.t === 'a') room.api.act(ws.slot, m);
