@@ -52,7 +52,7 @@ const castRoom = room => { const pl = [...room.clients].map(c => ({ i: c.slot, n
 function newCode() { for (let i = 0; i < 200; i++) { const c = String(1000 + Math.floor(Math.random() * 9000)); if (!rooms.has(c)) return c; } return null; }
 function freeSlot(room, want) {
   const used = new Set([...room.clients].map(c => c.slot));
-  if (Number.isInteger(want) && want >= 0 && want < MAX_HUMANS && !used.has(want)) return want;
+  if (Number.isInteger(want) && want >= 0 && want <= MAX_HUMANS && !used.has(want)) return want;
   for (let i = 0; i < MAX_HUMANS; i++) if (!used.has(i)) return i;
   return -1;
 }
@@ -97,6 +97,10 @@ function onMsg(ws, m) {
   const room = ws.room; if (!room) return;
   if (m.t === 'start') { if (!live(room)) startRoom(room); else enter(ws, room); }
   else if (m.t === 'leave') leave(ws);
+  else if (m.t === 'role') { if (ws.inGame && live(room)) return; const used = new Set([...room.clients].filter(c => c !== ws).map(c => c.slot));
+    if (m.h) { if (!used.has(MAX_HUMANS)) ws.slot = MAX_HUMANS; }
+    else if (ws.slot === MAX_HUMANS) { for (let i = 0; i < MAX_HUMANS; i++) if (!used.has(i)) { ws.slot = i; break; } }
+    castRoom(room); }
   else if (m.t === 'name') { ws.name = cleanName(m.name, ws.slot); if (m.look !== undefined) { ws.look = cleanLook(m.look); if (ws.inGame && ws.look) room.api.claim(ws.slot, ws.name, ws.look); } castRoom(room); }
   else if (!room.running || !ws.inGame) return;
   else if (m.t === 'i') room.api.input(ws.slot, m);
