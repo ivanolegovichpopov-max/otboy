@@ -1385,8 +1385,15 @@ function drawOverlayWorld(T){
  ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);
  if(!(G.litK>0.5)){const c=camTarget(),R=250,gr=ctx.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R),gf=ctx.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R);
   gr.addColorStop(0,'rgba(176,196,230,.5)');gr.addColorStop(1,'rgba(176,196,230,0)');gf.addColorStop(0,'rgba(176,196,230,.14)');gf.addColorStop(1,'rgba(176,196,230,0)');ctx.lineWidth=1.6;ctx.lineJoin='round';ctx.strokeStyle=gr;ctx.fillStyle=gf;
-  for(const o of rects){if(o.kind!=='wall'&&o.kind!=='drop')continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;
-   const H=wallH(o);if(o.kind==='wall')ctx.fillRect(o.x,o.y-H,o.w,o.h);ctx.strokeRect(o.x,o.y-H,o.w,o.h+H);}
+  // стены рядом: один общий контур и одна заливка на все куски, без наложений в углах
+  {const W=[];for(const o of rects){if(o.kind!=='wall'&&o.kind!=='drop')continue;if(o.b&&o.b.alpha>0.5)continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;W.push(o);}
+   if(W.length){if(!rimC){rimC=document.createElement('canvas');rimX=rimC.getContext('2d');}const rs=0.6,rw=Math.ceil(cv.width*rs),rh=Math.ceil(cv.height*rs);if(rimC.width!==rw||rimC.height!==rh){rimC.width=rw;rimC.height=rh;}
+    const X=rimX;X.setTransform(1,0,0,1,0,0);X.globalCompositeOperation='source-over';X.clearRect(0,0,rw,rh);X.setTransform(T[0]*rs,0,0,T[3]*rs,T[4]*rs,T[5]*rs);
+    const g1=X.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R),g2=X.createRadialGradient(c.x,c.y-20,30,c.x,c.y-20,R);g1.addColorStop(0,'rgba(176,196,230,.55)');g1.addColorStop(1,'rgba(176,196,230,0)');g2.addColorStop(0,'rgba(176,196,230,.14)');g2.addColorStop(1,'rgba(176,196,230,0)');
+    X.lineJoin='round';X.lineWidth=3.6;X.strokeStyle=g1;for(const o of W){const H=wallH(o);X.strokeRect(o.x,o.y-H,o.w,o.h+H);}
+    X.globalCompositeOperation='destination-out';X.fillStyle='#000';for(const o of W){const H=wallH(o);X.fillRect(o.x,o.y-H,o.w,o.h+H);}
+    X.globalCompositeOperation='source-over';X.fillStyle=g2;X.beginPath();for(const o of W)if(o.kind==='wall'){const H=wallH(o);X.rect(o.x,o.y-H,o.w,o.h);}X.fill();
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(rimC,0,0,cv.width,cv.height);ctx.restore();}}
   for(const o of rects){if(o.kind!=='fence'&&o.kind!=='low')continue;const qx=clamp(c.x,o.x,o.x+o.w),qy=clamp(c.y,o.y,o.y+o.h);if(Math.hypot(c.x-qx,c.y-qy)>R)continue;const H=wallH(o);ctx.beginPath();
    if(o.kind==='low')continue;if(o.h>o.w)ctx.rect(o.x,o.y-H,o.w,o.h);else{ctx.moveTo(o.x,o.y+o.h-H);ctx.lineTo(o.x+o.w,o.y+o.h-H);}ctx.stroke();}
   for(const b of buildings){if(b.alpha<=0.5)continue;const qx=clamp(c.x,b.x,b.x+b.w),qy=clamp(c.y,b.y,b.y+b.h);if(Math.hypot(c.x-qx,c.y-qy)>R+60)continue;ctx.globalAlpha=b.alpha;
@@ -1519,7 +1526,7 @@ function drawHUD(){
   ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(90,62,16,.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(kx,ky,16.5,0,7);ctx.stroke();ctx.restore();}
 }
 function msg(t){tbox(t,botCx(),VH-28,Math.min(botW(),400),17,'#f0b0a0',1);}
-let lastBtn='',camLX=0,camLY=0;
+let lastBtn='',camLX=0,camLY=0,rimC=null,rimX=null;
 function draw(){
  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);
  if(!G)return;
