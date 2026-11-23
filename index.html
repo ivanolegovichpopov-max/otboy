@@ -82,6 +82,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
   <div><button class="vibb hidden" id="toLobby">В комнату</button></div>
 </div>
 
+<!-- Фоновые записи (папка snd): ночь со сверчками — Lisa Redfern, общественное достояние (soundbible.com/2083); ветер — felix.blume, CC0 (freesound.org/people/felix.blume/sounds/217506); тревожный гул — kaligari, CC0 (freesound.org/people/kaligari/sounds/35392); тёмный вздох — EcoDTR, CC0 (freesound.org/people/EcoDTR/sounds/27281). -->
 <!-- Голосовые записи взяты из проекта Freedoom (https://freedoom.github.io).
 Copyright (c) 2001-2024 Contributors to the Freedoom project. All rights reserved.
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -223,7 +224,7 @@ function iosAudioSession(){try{if(navigator.audioSession)navigator.audioSession.
   const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(e){}}
 function initAudio(){try{iosAudioSession();if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();buildAudio();}if(AC.state!=='running')AC.resume();}catch(e){AC=null;}}
 for(const ev of['pointerdown','touchend','keydown','click'])addEventListener(ev,()=>{try{if(AC&&AC.state!=='running'){AC.resume();iosAudioSession();}}catch(e){}},true);
-function impulse(sec,decay){const n=AC.sampleRate*sec|0,b=AC.createBuffer(2,n,AC.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);}return b;}
+function impulse(sec,decay){const n=AC.sampleRate*sec|0,b=AC.createBuffer(2,n,AC.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let y=0;for(let i=0;i<n;i++){const k=i/n,a=0.5*Math.pow(1-k,2)+0.04;y+=a*((Math.random()*2-1)-y);d[i]=y*2.2*Math.pow(1-k,decay);}}return b;}
 function buildAudio(){
  const comp=AC.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=6;try{comp.attack.value=0.002;comp.release.value=0.18;}catch(e){}
  // мягкий ограничитель на выходе: громкие удары не хрипят
@@ -303,6 +304,12 @@ function PLAYD(k,t,v,rate,x,y){if(!SMPSRC[k])return;const c=camTarget(),d=Math.h
 // какие записи кому: мальчик/девочка, близко/далеко — выбирается случайно
 const VSET={bn:[['s1',1.3]],gn:[['s3',1.62]],bf:[['s3',1],['s2',1.3],['s2',1]],gf:[['s2',1.62]]};
 function voice(s,t,kind){const c=camTarget(),d=dist(c,s),girl=lookArr(s.lk)[0]===1,far=kind==='chase'||d>330,set=VSET[(girl?'g':'b')+(far?'f':'n')],p=set[Math.floor(Math.random()*set.length)];PLAYD(p[0],t,kind==='cage'?0.6:0.95,p[1]*(0.96+Math.random()*0.08),s.x,s.y);}
+const BED={},BEDG={};let bedsOn=false;
+function loadBeds(){if(bedsOn||SRV||!AC)return;bedsOn=true;const bus=AC.createGain();bus.gain.value=1;bus.connect(SFX);
+ for(const k of ['night','wind','dread','woosh'])fetch('snd/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer();}).then(b=>new Promise((ok,no)=>AC.decodeAudioData(b,ok,no))).then(buf=>{BED[k]=buf;if(k==='woosh')return;
+   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=buf;src.loop=true;g.gain.value=0;src.connect(g).connect(bus);src.start(0,Math.random()*buf.duration);BEDG[k]=g;}).catch(()=>{});}
+function bedSet(k,v,tc){const g=BEDG[k];if(g)g.gain.setTargetAtTime(v,AC.currentTime,tc||0.8);}
+function bedShot(k,v,rate){const b=BED[k];if(!b)return false;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.playbackRate.value=rate||1;g.gain.value=v;s.connect(g).connect(AMB||SFX);s.start();return true;}
 let SPOS=null;const at=(x,y)=>{SPOS=[Math.round(x),Math.round(y)];};
 function mbox(f,t,vol,dest){O('sine',f,t,0.006,1.7,vol,dest);O('sine',f*3.01,t,0.004,0.45,vol*0.15,dest);O('triangle',f*2,t,0.005,0.8,vol*0.1,dest);}
 function brass(f,t,d,vol){const o=AC.createOscillator(),fl=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=f;fl.type='lowpass';fl.frequency.setValueAtTime(250,t);fl.frequency.linearRampToValueAtTime(1300,t+0.12);fl.frequency.linearRampToValueAtTime(600,t+d);env(g,t,0.06,vol,d);o.connect(fl).connect(g).connect(SFX);o.start(t);o.stop(t+d+0.1);}
@@ -411,8 +418,8 @@ function sfx(n,v){const sp=SPOS;SPOS=null;if(!AC||document.hidden)return;v=v==nu
 const BT=0.4,MELA=[7,null,7, 8,7,3, 5,null,2, 3,0,null, 7,null,7, 8,7,12, 11,null,8, 7,null,null, 0,3,7, 8,7,3, 2,5,8, 7,null,null, 0,3,7, 12,11,8, 7,5,2, 0,null,null];
 const CHS={A:{r:0,n:[3,7]},D:{r:5,n:[5,8]},E:{r:-5,n:[-1,2]},F:{r:-4,n:[0,3]}},CHSEQ='ADEAAFEEAFDEAFEA';
 function motif(t,base,step,vol,fn,notes){const nn=notes||[7,7,8,7,3],R=[2,1,1,1,3];let x=t;nn.forEach((n,i)=>{fn(base*Math.pow(2,n/12),x,vol,R[i]*step);x+=R[i]*step;});}
-function musicStart(){if(!AC)return;musOn=true;musNext=AC.currentTime+0.25;musStep=0;hbNext=0;SET(MUS,1,0.4);SET(drone,0.1,1.5);SET(wind,0.05,2);}
-function musicStop(){if(!AC)return;musOn=false;SET(MUS,0,0.6);SET(drone,0,1);SET(wind,0,1.5);SET(hum,0,0.3);SET(chase,0,0.5);}
+function musicStart(){if(!AC)return;musOn=true;musNext=AC.currentTime+0.25;musStep=0;hbNext=0;SET(MUS,1,0.4);SET(drone,0,1.5);SET(wind,0,2);loadBeds();}
+function musicStop(){if(!AC)return;musOn=false;SET(MUS,0,0.6);SET(drone,0,1);SET(wind,0,1.5);SET(hum,0,0.3);SET(chase,0,0.5);for(const k in BEDG)bedSet(k,0,0.5);}
 function musicTick(){if(!AC||!musOn)return;const now=AC.currentTime,chT=chaseNear();
  while(musNext<now+0.3){chI+=(chT-chI)*(chT>chI?0.09:0.2);const ch0=chI>0.5;if(musStep%192===0)musLen=20+Math.floor(Math.random()*28);const gate=(musStep%192)<musLen;const i=musStep%48,bar=(i/3|0),beat=i%3,bt=BT*(1+0.045*Math.sin(musStep*0.11)),s=MELA[i],ch=CHS[CHSEQ[bar]];
   if(gate&&s!==null&&Math.random()>0.03)mbox(440*Math.pow(2,(s+(Math.random()-0.5)*0.1)/12),musNext,ch0?0.03:0.085,MUS);
@@ -437,7 +444,7 @@ function atmoTick(dt,now,ct,kd){if(G.intro>0||G.over)return;const A=G.atm||(G.at
  // «глаза» во тьме: появляются вдалеке, исчезают, если посветить или подойти
  if(G.fake){const f=G.fake;f.t-=dt;if(f.t>0.3&&(dist(P,f)<120||inBeam(P,f.x,f.y)||inLight(f.x,f.y)))f.t=0.3;if(f.t<=0)G.fake=null;}
  else{A.fake-=dt;if(A.fake<=0){A.fake=35+Math.random()*50;if(kd>450&&active(P)&&!P.hidden&&!(G.litK>0.5)){for(let k=0;k<12;k++){const a=Math.random()*6.283,d=210+Math.random()*90,x=P.x+Math.cos(a)*d,y=P.y+Math.sin(a)*d;
-    if(x<60||y<60||x>WW-60||y>WH-60||hits(x,y,14)||inLight(x,y)||inBeam(P,x,y)||roofAt(x,y))continue;G.fake={x,y,t:2.8,t0:2.8};pan(clamp((x-P.x)/300,-1,1));sfx('whisper',1);break;}}}}
+    if(x<60||y<60||x>WW-60||y>WH-60||hits(x,y,14)||inLight(x,y)||inBeam(P,x,y)||roofAt(x,y))continue;G.fake={x,y,t:2.8,t0:2.8};pan(clamp((x-P.x)/300,-1,1));if(!bedShot('woosh',0.5,0.9+Math.random()*0.2))sfx('whisper',1);break;}}}}
  // свет в окне пустого дома
  if(G.ghost){G.ghost.t-=dt;if(G.ghost.t<=0)G.ghost=null;}else{A.gh-=dt;if(A.gh<=0){A.gh=25+Math.random()*40;const c=buildings.filter(b=>dist(ct,{x:b.x+b.w/2,y:b.y+b.h/2})<760&&![...S,K].some(e=>e.x>b.x&&e.x<b.x+b.w&&e.y>b.y&&e.y<b.y+b.h));if(c.length)G.ghost={b:c[Math.floor(Math.random()*c.length)],t:0.7+Math.random()*0.9};}}}
 const roofAt=(x,y)=>buildings.some(b=>x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h);
@@ -449,8 +456,8 @@ function audioTick(dt){if(!AC||!musOn)return;musicTick();const now=AC.currentTim
  // сердцебиение: «тук-тук», в такт с пульсацией краёв экрана и вибрацией
  if(kd<600){if(hbNext<now){const v=0.18+0.5*(1-kd/600),t=now+0.01,gap=0.13+0.07*kd/600;O('sine',56,t,0.01,0.13,v,SFX,38,170);N('lowpass',120,0.7,t,0.005,0.08,v*0.5);O('sine',72,t+gap,0.008,0.09,v*0.72,SFX,46,210);O('triangle',150,t,0.006,0.11,v*0.8,SFX,80);N('bandpass',300,1.2,t,0.004,0.06,v*0.5);O('triangle',180,t+gap,0.005,0.08,v*0.6,SFX,95);N('bandpass',340,1.2,t+gap,0.004,0.05,v*0.35);
    hbNext=now+0.36+kd/600*1.0;hbPulse=performance.now();if(kd<220&&active(P))vib([22,Math.round(gap*1000-22),14]);}}
- if(musOn)SET(drone,0.07,0.6);
- {const cn=chaseNear();SET(chase,cn>=1?0.16:cn>0?0.05+0.1*cn:0,1.4);
+ if(musOn){const out=!inBuilding(ct);bedSet('night',G.litK>0.5?0.3:(out?0.6:0.22),1.2);bedSet('wind',(out?1:0.35)*(0.2+0.16*Math.sin(now*0.13)+0.1*Math.sin(now*0.047+1)),1.5);}
+ {const cn=chaseNear();SET(chase,0,0.5);bedSet('dread',cn>=1?0.75:cn>0?0.25+0.4*cn:((K.state==='search'||K.state==='investigate')&&kd<480?0.22:0),1.6);
   // рядом гонятся за товарищем: слышен его крик
   if(cn>0&&cn<1&&K.target&&K.target!==P){G.scrT=(G.scrT==null?1.5:G.scrT)-dt;if(G.scrT<=0){G.scrT=5+Math.random()*4;const tg=K.target;if(APAN)try{APAN.pan.setValueAtTime(clamp((tg.x-ct.x)/380,-1,1),now);}catch(e){}voice(tg,now+0.02,'chase');}}else G.scrT=1.5;}
  // гудение щитка
