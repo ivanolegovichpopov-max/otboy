@@ -208,7 +208,7 @@ function seeKiller(o){if(o===K)return 1;const d=dist(o,K);if(d<70)return 1;if(!l
  return 0;}
 
 // ---------- звук (всё синтезируется, без писка) ----------
-let AMB=null,KB=null,APAN=null,KPAN=null,musLen=40,AC=null,SFX,MUS,REVIN,NOISE,drone,wind,hum,chase,musOn=false,musNext=0,musStep=0,hbNext=0,owlT=15;
+let HV=null,AMB=null,KB=null,APAN=null,KPAN=null,musLen=40,AC=null,SFX,MUS,REVIN,NOISE,drone,wind,hum,chase,musOn=false,musNext=0,musStep=0,hbNext=0,owlT=15;
 let silentEl=null;
 function iosAudioSession(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
  try{if(!silentEl){const sr=8000,n=sr/4,buf=new ArrayBuffer(44+n),v=new DataView(buf),W=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};W(0,'RIFF');v.setUint32(4,36+n,true);W(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr,true);v.setUint16(32,1,true);v.setUint16(34,8,true);W(36,'data');v.setUint32(40,n,true);for(let i=0;i<n;i++)v.setUint8(44+i,128);
@@ -222,6 +222,9 @@ function buildAudio(){
  const M=AC.createGain();M.gain.value=0.9;M.connect(comp);
  REVIN=AC.createConvolver();REVIN.buffer=impulse(2.8,2.4);const rg=AC.createGain();rg.gain.value=0.45;REVIN.connect(rg).connect(M);
  SFX=AC.createGain();SFX.connect(M);const s1=AC.createGain();s1.gain.value=0.25;SFX.connect(s1).connect(REVIN);
+ // «тяжёлая» шина: перегруз даёт низам слышимые обертоны (бас слышен и на динамике телефона), подъём низа, свой посыл в эхо
+ HV=AC.createGain();HV.gain.value=2.4;{const ws=AC.createWaveShaper(),n=1024,cvv=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1;cvv[i]=Math.tanh(2.4*x);}ws.curve=cvv;ws.oversample='2x';
+  const ls=AC.createBiquadFilter();ls.type='lowshelf';ls.frequency.value=220;ls.gain.value=7;const og=AC.createGain();og.gain.value=0.56;HV.connect(ws).connect(ls).connect(og);og.connect(M);const rs=AC.createGain();rs.gain.value=0.55;og.connect(rs).connect(REVIN);}
  AMB=AC.createGain();KB=AC.createGain();try{APAN=AC.createStereoPanner();KPAN=AC.createStereoPanner();AMB.connect(APAN).connect(SFX);KB.connect(KPAN).connect(SFX);}catch(e){APAN=KPAN=null;AMB.connect(SFX);KB.connect(SFX);}
  MUS=AC.createGain();MUS.gain.value=0;MUS.connect(M);const s2=AC.createGain();s2.gain.value=0.7;MUS.connect(s2).connect(REVIN);
  NOISE=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
@@ -246,6 +249,9 @@ function N(type,f,q,t,a,d,vol,dest,f2){const s=AC.createBufferSource();s.buffer=
 // удар/взрыв: тело в 120–300 Гц, хлопок, шумовой хвост; s — размер (0.6 удар … 1.5 взрыв)
 function BM(t,v,s,dest){s=s||1;dest=dest||SFX;O('triangle',300*Math.pow(s,-0.4),t,0.004,0.22+0.22*s,0.55*v,dest,62,1100);O('sine',170,t,0.004,0.3+0.2*s,0.5*v,dest,48);
  N('lowpass',1700,0.7,t,0.003,0.3+0.35*s,0.6*v,dest,220);N('highpass',2200,0.7,t,0.001,0.035,0.26*v,dest);N('bandpass',340,0.6,t+0.05,0.06,0.5+0.8*s,0.2*v*s,dest,150);}
+// мощный удар/взрыв на тяжёлой шине: падающий бас, тело, рёв шума, щелчок, вторая волна и гул
+function BIG(t,v,s){s=s||1;O('sine',165,t,0.004,0.5+0.4*s,0.9*v,HV,38);O('triangle',330,t,0.003,0.2+0.15*s,0.5*v,HV,70,1400);N('lowpass',3200,0.7,t,0.002,0.45+0.5*s,0.8*v,HV,140);N('highpass',2500,0.7,t,0.001,0.03,0.5*v,HV);
+ O('sine',112,t+0.085,0.006,0.35+0.3*s,0.5*v,HV,34);N('bandpass',260,0.6,t+0.06,0.08,0.9+1.0*s,0.3*v*s,HV,110);}
 function mbox(f,t,vol,dest){O('sine',f,t,0.006,1.7,vol,dest);O('sine',f*3.01,t,0.004,0.45,vol*0.15,dest);O('triangle',f*2,t,0.005,0.8,vol*0.1,dest);}
 function brass(f,t,d,vol){const o=AC.createOscillator(),fl=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.value=f;fl.type='lowpass';fl.frequency.setValueAtTime(250,t);fl.frequency.linearRampToValueAtTime(1300,t+0.12);fl.frequency.linearRampToValueAtTime(600,t+d);env(g,t,0.06,vol,d);o.connect(fl).connect(g).connect(SFX);o.start(t);o.stop(t+d+0.1);}
 const SET=(node,v,tc)=>{if(node)node.gain.setTargetAtTime(v,AC.currentTime,tc||0.3);};
@@ -303,17 +309,17 @@ function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.curren
  case 'stepk':O('sine',64,t,0.004,0.2,0.5*v,KB,38);O('triangle',140,t,0.004,0.12,0.4*v,KB,70);N('lowpass',260,0.6,t,0.004,0.13,0.35*v,KB);N('bandpass',900,1,t+0.02,0.01,0.08,0.05*v,KB);break;
  // --- пробы звуков: по три варианта, игрок выбирает на слух ---
  // удар охотника
- case 'hitA':BM(t,1,0.7);N('bandpass',1500,1.4,t,0.002,0.09,0.3,SFX,600);break;
- case 'hitB':N('bandpass',420,1.2,t,0.09,0.05,0.22,SFX,1900);N('highpass',2600,0.7,t+0.13,0.001,0.04,0.45);BM(t+0.13,1,0.75);N('bandpass',900,0.8,t+0.16,0.01,0.45,0.16,SFX,300);break;
- case 'hitC':BM(t,0.95,0.9);O('triangle',523,t+0.005,0.002,0.7,0.12,SFX,515,2400);O('triangle',784,t+0.005,0.002,0.5,0.07,SFX,770,3000);O('sine',196,t,0.003,0.5,0.3,SFX,150);break;
+ case 'hitA':BIG(t,0.95,0.5);N('bandpass',1400,1.2,t,0.002,0.1,0.35,HV,500);break;
+ case 'hitB':N('bandpass',380,1.1,t,0.11,0.05,0.3,SFX,2000);BIG(t+0.15,1.05,0.65);N('highpass',2800,0.7,t+0.15,0.001,0.05,0.5,HV);N('bandpass',800,0.7,t+0.2,0.02,0.7,0.2,HV,220);break;
+ case 'hitC':BIG(t,1,0.8);O('triangle',523,t+0.005,0.002,0.9,0.16,SFX,512,2600);O('triangle',784,t+0.005,0.002,0.7,0.1,SFX,768,3200);O('sawtooth',98,t,0.004,0.5,0.35,HV,60,500);break;
  // взрыв щитка
- case 'expA':BM(t,1,1.5);O('sawtooth',1300,t,0.003,0.26,0.1,SFX,150,2800);[0.22,0.36,0.61,0.78].forEach((d,i)=>N('highpass',3200-i*350,1.5,t+d,0.001,0.035,0.2-i*0.035));N('bandpass',2600,0.8,t+0.1,0.03,1.0,0.07,SFX,800);break;
- case 'expB':O('sawtooth',100,t,0.004,0.34,0.3,SFX,96,2600);O('square',200,t,0.004,0.34,0.14,SFX,190,3200);N('bandpass',2800,3,t,0.004,0.34,0.18);BM(t+0.36,1.05,1.3);N('bandpass',2200,0.8,t+0.45,0.03,0.8,0.06,SFX,600);break;
- case 'expC':BM(t,1.05,2.2);N('lowpass',900,0.7,t+0.04,0.05,1.7,0.3,SFX,120);O('sawtooth',210,t+0.05,0.02,1.5,0.12,SFX,52,700);O('triangle',330,t,0.004,0.5,0.3,SFX,70,900);break;
+ case 'expA':BIG(t,1.05,1.5);O('sawtooth',1400,t,0.003,0.3,0.14,SFX,140,3000);O('sawtooth',100,t+0.02,0.01,0.5,0.3,HV,70,900);[0.3,0.47,0.74,0.98].forEach((d,i)=>N('highpass',3200-i*350,1.5,t+d,0.001,0.04,0.24-i*0.04));N('bandpass',2600,0.8,t+0.1,0.03,1.3,0.09,SFX,700);break;
+ case 'expB':O('sawtooth',100,t,0.004,0.36,0.5,HV,95,2400);O('square',200,t,0.004,0.36,0.2,HV,188,3000);N('bandpass',2800,3,t,0.004,0.36,0.22);BIG(t+0.38,1.1,1.5);N('bandpass',2200,0.8,t+0.5,0.03,1.1,0.08,SFX,600);break;
+ case 'expC':BIG(t,1.1,2.4);BIG(t+0.22,0.6,1.6);O('sawtooth',220,t+0.05,0.02,1.9,0.3,HV,45,700);N('lowpass',700,0.7,t+0.1,0.1,2.2,0.3,HV,90);break;
  // щиток заведён
- case 'genA':BM(t,0.6,0.6);O('triangle',900,t,0.002,0.12,0.14,SFX,500,2600);O('sawtooth',52,t+0.12,0.9,0.9,0.2,SFX,100,620);O('sawtooth',104,t+0.12,0.9,0.9,0.1,SFX,200,900);[523.3,659.3,784].forEach((f,i)=>mbox(f,t+0.95+i*0.14,0.12));break;
- case 'genB':O('sawtooth',58,t,1.5,0.7,0.2,SFX,230,950);O('square',29,t,1.5,0.7,0.07,SFX,115,700);N('bandpass',320,1.5,t,1.5,0.6,0.1,SFX,1700);N('highpass',2400,0.7,t+1.55,0.001,0.04,0.3);BM(t+1.55,0.45,0.6);O('sawtooth',100,t+1.6,0.05,0.9,0.1,SFX,100,520);break;
- case 'genC':O('sawtooth',1500,t,0.003,0.16,0.1,SFX,260,3000);N('highpass',3000,1,t,0.001,0.05,0.22);O('sawtooth',100,t+0.25,0.02,0.1,0.12,SFX,100,1400);O('sawtooth',100,t+0.48,0.02,0.14,0.14,SFX,100,1400);O('sawtooth',100,t+0.78,0.08,1.2,0.14,SFX,100,1100);O('sine',1318.5,t+0.82,0.004,1.1,0.07);O('sine',1975.5,t+0.82,0.004,0.7,0.035);break;
+ case 'genA':BIG(t,0.6,0.35);BIG(t+0.1,0.5,0.35);O('sawtooth',50,t+0.2,0.9,1.1,0.4,HV,100,700);O('sawtooth',100,t+0.2,0.9,1.1,0.16,HV,200,1000);[523.3,659.3,784].forEach((f,i)=>mbox(f,t+1.1+i*0.14,0.13));break;
+ case 'genB':O('sawtooth',38,t,1.6,0.8,0.45,HV,132,900);O('square',19,t,1.6,0.8,0.14,HV,66,600);O('sine',300,t,1.6,0.5,0.05,SFX,1500);N('bandpass',300,1.5,t,1.6,0.6,0.14,HV,1600);BIG(t+1.65,0.55,0.4);O('sawtooth',100,t+1.7,0.05,1.2,0.25,HV,100,560);break;
+ case 'genC':O('sawtooth',1500,t,0.003,0.18,0.14,SFX,240,3000);N('highpass',3000,1,t,0.001,0.05,0.3);BIG(t,0.5,0.4);O('sawtooth',100,t+0.3,0.02,0.1,0.3,HV,100,1500);O('sawtooth',100,t+0.52,0.02,0.14,0.34,HV,100,1500);O('sawtooth',100,t+0.82,0.08,1.4,0.34,HV,100,1100);O('sine',1318.5,t+0.86,0.004,1.2,0.08);O('sine',1975.5,t+0.86,0.004,0.8,0.04);break;
  // --- атмосфера ---
  case 'scream':O('sawtooth',620,t,0.05,0.5,0.045*v,AMB,880,2200);O('sawtooth',640,t+0.02,0.05,0.45,0.03*v,AMB,470,1800);N('bandpass',1500,2,t,0.05,0.4,0.03*v,AMB,2100);break;
  case 'owl':O('sine',390,t,0.07,0.32,0.04*v,AMB,350);O('sine',380,t+0.5,0.07,0.4,0.036*v,AMB,330);break;
