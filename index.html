@@ -269,10 +269,10 @@ function brass(f,t,d,vol){const o=AC.createOscillator(),fl=AC.createBiquadFilter
 const SET=(node,v,tc)=>{if(node)node.gain.setTargetAtTime(v,AC.currentTime,tc||0.3);};
 function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.currentTime+0.01;switch(n){
  case 'spot':motif(t,110,0.1,0.085,(f,x,vv,d)=>brass(f,x,d+0.08,vv));N('lowpass',180,0.7,t,0.05,1.1,0.28);O('sine',55,t,0.02,1.0,0.25,SFX,40);break;
- case 'gen':BM(t,0.5,0.8);[220,261.6,329.6].forEach((f,i)=>mbox(f,t+0.15+i*0.13,0.13));break;
+ case 'gen':N('highpass',2600,1,t,0.001,0.03,0.12);O('sawtooth',50,t+0.05,1.0,1.2,0.4,HV,100,700);O('sawtooth',100,t+0.05,1.0,1.2,0.16,HV,200,1000);[523.3,659.3,784].forEach((f,i)=>mbox(f,t+1.0+i*0.14,0.13));break;
  case 'power':N('lowpass',300,0.7,t,0.004,0.4,0.5);[196,261.6,329.6,392].forEach((f,i)=>brass(f,t+0.3+i*0.32,i===3?1.1:0.3,0.09));break;
- case 'hit':BM(t,0.9,0.7);N('bandpass',1500,1.4,t,0.002,0.09,0.3,SFX,600);O('sawtooth',210,t+0.01,0.004,0.16,0.1,SFX,90,900);break;
- case 'lock':BM(t,0.7,0.8);O('triangle',700,t+0.03,0.002,0.5,0.1,SFX,640,2200);O('triangle',1050,t+0.03,0.002,0.35,0.06,SFX,980,2600);break;
+ case 'hit':RISE(t,0.1,0.3);CINE(t+0.1,1,0.8);[211,347,523,811].forEach((f,i)=>O('triangle',f,t+0.105,0.002,1.3-i*0.2,0.1-i*0.015,SFX,f*0.985,3200));break;
+ case 'lock':CINE(t,0.6,0.6);O('triangle',700,t+0.03,0.002,0.5,0.1,SFX,640,2200);O('triangle',1050,t+0.03,0.002,0.35,0.06,SFX,980,2600);break;
  case 'free':N('bandpass',600,9,t,0.05,0.6,0.18,SFX,950);mbox(329.6,t+0.35,0.12);mbox(440,t+0.5,0.1);break;
  case 'gate':N('bandpass',330,10,t,0.2,1.5,0.22,SFX,620);N('lowpass',300,0.7,t+1.6,0.004,0.3,0.45);O('sine',70,t+1.6,0.004,0.4,0.3,SFX,40);break;
  case 'escape':[261.6,329.6,392,523.3].forEach((f,i)=>mbox(f,t+i*0.16,0.14));break;
@@ -280,10 +280,10 @@ function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.curren
  case 'throw':N('bandpass',800,1,t,0.05,0.2,0.14,SFX,300);break;
  case 'thump':BM(t,0.5*v,0.7);BM(t+0.42,0.26*v,0.6);break;
  case 'vault':N('bandpass',700,0.8,t,0.01,0.12,0.12);O('sine',110,t+0.25,0.004,0.12,0.18,SFX,60);N('lowpass',500,0.6,t+0.25,0.004,0.08,0.12);break;
- case 'drop':BM(t,0.8,1.0);N('bandpass',1200,1,t,0.004,0.18,0.18);break;
- case 'stun':BM(t,0.6,0.8);O('triangle',330,t,0.01,0.6,0.09,SFX,250);O('triangle',415,t+0.07,0.01,0.55,0.07,SFX,300);break;
+ case 'drop':CINE(t,0.65,0.7);N('bandpass',1200,1,t,0.004,0.18,0.18);break;
+ case 'stun':CINE(t,0.6,0.6);O('triangle',330,t,0.01,0.6,0.09,SFX,250);O('triangle',415,t+0.07,0.01,0.55,0.07,SFX,300);break;
  case 'breakstart':N('lowpass',400,0.7,t,0.004,0.2,0.3);O('sine',80,t,0.004,0.2,0.3,SFX,45);N('lowpass',400,0.7,t+0.7,0.004,0.2,0.3);N('lowpass',400,0.7,t+1.4,0.004,0.2,0.35);break;
- case 'break':BM(t,0.75,1.0);N('bandpass',1500,1.2,t+0.02,0.004,0.3,0.2,SFX,500);break;
+ case 'break':CINE(t,0.6,0.7);N('bandpass',1500,1.2,t+0.02,0.004,0.3,0.2,SFX,500);break;
  case 'lunge':N('bandpass',500,0.8,t,0.02,0.25,0.25,SFX,1400);break;
  case 'miss':N('lowpass',300,0.6,t,0.004,0.15,0.2);break;
  case 'dodge':N('bandpass',1400,0.8,t,0.02,0.2,0.12,SFX,500);mbox(523.3,t+0.05,0.12);mbox(659.3,t+0.15,0.1);break;
@@ -296,7 +296,7 @@ function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.curren
  case 'ding':mbox(880,t,0.09);break;
  case 'good':mbox(659.3,t,0.1);break;
  case 'great':mbox(659.3,t,0.1);mbox(987.8,t+0.08,0.09);break;
- case 'fail':BM(t,0.95*v,1.5);O('sawtooth',1200,t,0.003,0.28,0.09*v,SFX,140,2600);N('bandpass',2600,0.8,t+0.06,0.02,0.75,0.07*v,SFX,700);break;
+ case 'fail':O('sawtooth',100,t,0.004,0.36,0.5*v,HV,95,2400);N('bandpass',2800,3,t,0.004,0.36,0.22*v);CINE(t+0.38,v,1.5);BRAAM(t+0.4,0.7*v,2.0);break;
  case 'wiggle':N('bandpass',500+Math.random()*300,1,t,0.01,0.08,0.08);break;
  case 'battery':mbox(523.3,t,0.08);mbox(784,t+0.1,0.07);N('bandpass',1500,1,t,0.005,0.05,0.05);break;
  case 'blind':O('sawtooth',130,t,0.02,0.7,0.09,SFX,80,700);N('bandpass',600,1,t,0.02,0.5,0.12,SFX,300);break;
@@ -349,7 +349,7 @@ function sfx(n,v){if(!AC||document.hidden)return;v=v==null?1:v;const t=AC.curren
  case 'uiclick':O('sine',300,t,0.003,0.07,0.15,SFX,180);N('bandpass',1500,1,t,0.002,0.03,0.05);break;
  case 'endlose':O('sine',55,t,0.3,4,0.2);motif(t+0.3,220,0.36,0.14,(f,x,vv)=>mbox(f,x,vv),[7,7,8,7,2.7]);break;
  case 'endwin':motif(t+0.2,440,0.26,0.13,(f,x,vv)=>mbox(f,x,vv),[7,7,9,7,4]);[0,4,7,12].forEach((n,i)=>mbox(440*Math.pow(2,n/12),t+2.2+i*0.07,0.09));break;
- case 'impact':BM(t,0.8*v,1.1);break;
+ case 'impact':CINE(t,0.6*v,0.7);break;
  case 'pick':N('bandpass',1500,1,t,0.01,0.08,0.06);N('bandpass',1100,1,t+0.07,0.01,0.07,0.05);break;
  case 'spark':for(let k=0;k<4;k++)N('bandpass',1500+Math.random()*900,2,t+k*0.045+Math.random()*0.02,0.002,0.03,0.09*v);break;
 }}
@@ -510,7 +510,7 @@ function newGame(LY){
 const active=s=>s.state==='ok'||s.state==='injured';
 function noise(x,y,r){G.noises.push({x,y,r});}
 
-function genDone(g){g.done=true;g.p=1;G.done++;boom(g.x,g.y-22,{r:130,col:'150,255,170',snd:0.25,rays:12,arcs:4,beam:1,shake:0.25,zoom:0.04,dur:0.8});stars(g.x,g.y-24,20,'190,255,170',{v:260,vz:340,life:1.2});stars(g.x,g.y-24,10,'255,235,150',{v:180,vz:400,life:1.3});floatTxt(g.x,g.y-86,'Щиток готов!','#a8f0a0',26);let rv=0;for(const s of S)if(active(s)&&dist(s,g)<220){s.revealT=4;rv++;}if(rv)later(250,()=>sfx('reveal'));fxAdd('spark',g.x,g.y-24,24,{v:220,vz:260,life:0.9,g:500});ring(g.x,g.y,130,'#a8e0a0',0.9);if(nearCam(g.x,g.y,250))vib(35);noise(g.x,g.y,650);sfx('gen');if(G.done>=5&&!G.powerOn){G.powerOn=true;G.lightsOn=true;for(const l of lamps)boom(l.x+12,l.y-72,{r:l.gate?140:80,col:'255,225,150',rays:l.gate?12:6,shake:0,zoom:0,dur:0.9,range:1});zoomKick=0.08;shakeT=Math.max(shakeT,0.3);screenFlash('255,240,190',0.8,true);flashT=0.5;floatTxt(P.x,P.y-90,'ТОК ДАН!','#ffe08a',36);for(const s of S)if(active(s))s.revealT=5;later(400,()=>sfx('power'));vib([60,60,60,60,120]);for(const l of lamps)if(l.gate)ring(l.x,l.y,260,'#ffd98a',1.4);}}
+function genDone(g){g.done=true;g.p=1;G.done++;boom(g.x,g.y-22,{r:130,col:'150,255,170',snd:0,rays:12,arcs:4,beam:1,shake:0.25,zoom:0.04,dur:0.8});stars(g.x,g.y-24,20,'190,255,170',{v:260,vz:340,life:1.2});stars(g.x,g.y-24,10,'255,235,150',{v:180,vz:400,life:1.3});floatTxt(g.x,g.y-86,'Щиток готов!','#a8f0a0',26);let rv=0;for(const s of S)if(active(s)&&dist(s,g)<220){s.revealT=4;rv++;}if(rv)later(250,()=>sfx('reveal'));fxAdd('spark',g.x,g.y-24,24,{v:220,vz:260,life:0.9,g:500});ring(g.x,g.y,130,'#a8e0a0',0.9);if(nearCam(g.x,g.y,250))vib(35);noise(g.x,g.y,650);sfx('gen');if(G.done>=5&&!G.powerOn){G.powerOn=true;G.lightsOn=true;for(const l of lamps)boom(l.x+12,l.y-72,{r:l.gate?140:80,col:'255,225,150',rays:l.gate?12:6,shake:0,zoom:0,dur:0.9,range:1});zoomKick=0.08;shakeT=Math.max(shakeT,0.3);screenFlash('255,240,190',0.8,true);flashT=0.5;floatTxt(P.x,P.y-90,'ТОК ДАН!','#ffe08a',36);for(const s of S)if(active(s))s.revealT=5;later(400,()=>sfx('power'));vib([60,60,60,60,120]);for(const l of lamps)if(l.gate)ring(l.x,l.y,260,'#ffd98a',1.4);}}
 function openGate(i){const g=G.gates[i];if(g.open)return;g.open=true;g.rect.open=true;buildGrid();sfx('gate');S.forEach(s=>s.repath=0);K.repath=0;}
 function freeSurv(c,r){boom(c.x,c.y-20,{r:70,col:'170,255,180',snd:0.25,rays:8,shake:0.1,zoom:0.02,dur:0.4});stars(c.x,c.y-24,14,'190,255,180',{v:200,vz:280});floatTxt(c.x,c.y-80,'Свободен!','#a8f0a0',24);puffs(c.x,c.y,8);ring(c.x,c.y,50,'#a8e0a0',0.5);if(r&&r.isPlayer||c.who.isPlayer)vib(30);const v=c.who;v.state='injured';v.boost=1.2;v.closet=null;c.who=null;c.p=0;v.x=c.x+14;v.y=c.y+14;collide(v);if(r)r.score+=150;sfx('free');}
 function lockSurv(v,c){v.locks++;v.hidden=false;boom(c.x,c.y-20,{r:60,col:'255,80,60',rays:0,shake:0.2,zoom:0.03,dur:0.35});floatTxt(c.x,c.y-84,v.locks>=3?'Выбыл…':'Заперт!','#ff6a5a',26);fxAdd('dust',c.x,c.y+16,8,{v:60,r:5,life:0.7,g:0});if(v.isPlayer)vib(v.locks>=3?400:[120,80,60]);if(v.locks>=3){v.state='out';sfx('out');return;}v.state='locked';v.lockT=v.locks===1?60:30;c.who=v;c.p=0;v.closet=c;v.x=c.x;v.y=c.y;sfx('lock');}
