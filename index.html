@@ -231,9 +231,9 @@ function buildAudio(){
   const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=0.07;lg.gain.value=170;l.connect(lg).connect(bp.frequency);l.start();s.connect(bp).connect(wind).connect(SFX);s.start();}
  // гудение щитка
  hum=AC.createGain();hum.gain.value=0;{const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;[50,100.4,150.2].forEach((f,i)=>{const o=AC.createOscillator();o.type=i?'sine':'sawtooth';o.frequency.value=f;o.connect(lp);o.start();});lp.connect(hum).connect(SFX);}
- // слой погони: низкие дрожащие струнные
- chase=AC.createGain();chase.gain.value=0;{const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=650;const tr=AC.createGain();tr.gain.value=0.5;const tl=AC.createOscillator(),tg=AC.createGain();tl.frequency.value=7;tg.gain.value=0.5;tl.connect(tg).connect(tr.gain);tl.start();
-  [110,116.5,164.8].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=(Math.random()-.5)*14;o.connect(lp);o.start();});lp.connect(tr).connect(chase).connect(MUS);}
+ // слой погони: ровный низкий тревожный гул (без дрожи и ритма)
+ chase=AC.createGain();chase.gain.value=0;{const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=320;const tr=AC.createGain();tr.gain.value=0.8;const tl=AC.createOscillator(),tg=AC.createGain();tl.frequency.value=0.22;tg.gain.value=0.2;tl.connect(tg).connect(tr.gain);tl.start();
+  [82.4,87.3,123.5].forEach(f=>{const o=AC.createOscillator();o.type='triangle';o.frequency.value=f;o.detune.value=(Math.random()-.5)*10;o.connect(lp);o.start();});lp.connect(tr).connect(chase).connect(MUS);}
 }
 function env(g,t,a,peak,d){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+d);}
 function O(type,f,t,a,d,vol,dest,f2,lp){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+a+d);env(g,t,a,vol,d);
@@ -315,8 +315,7 @@ function musicTick(){if(!AC||!musOn)return;const now=AC.currentTime,chT=K.state=
   if(s!==null&&Math.random()>0.03)mbox(440*Math.pow(2,(s+(Math.random()-0.5)*0.1)/12),musNext,ch0?0.03:0.085,MUS);
   if(beat===0)O('triangle',110*Math.pow(2,ch.r/12),musNext,0.03,bt*2.6,ch0?0.05:0.1,MUS,null,320);
   else if(!ch0){mbox(220*Math.pow(2,ch.n[0]/12),musNext,0.02,MUS);mbox(220*Math.pow(2,ch.n[1]/12),musNext,0.02,MUS);}
-  if(chI>0.3){const n=[0,12,0,10][musStep%4];O('triangle',110*Math.pow(2,(n+ch.r)/12),musNext,0.03,bt*0.9,0.13*chI,MUS,null,420);}if(ch0){
-   if(beat===0)N('lowpass',180,0.7,musNext,0.004,0.2,0.28,MUS);}
+  
   musStep++;musNext+=bt;}}
 let chI=0,hbPulse=0,flashCol='255,235,220',breathT=0;
 function stepSound(s,v,inside){if(inside)sfx('stepw',v);else sfx('stepg',v);}
@@ -325,7 +324,7 @@ function audioTick(dt){if(!AC||!musOn)return;musicTick();const now=AC.currentTim
  if(kd<600){if(hbNext<now){const v=0.18+0.5*(1-kd/600),t=now+0.01,gap=0.13+0.07*kd/600;O('sine',56,t,0.01,0.13,v,SFX,38,170);N('lowpass',120,0.7,t,0.005,0.08,v*0.5);O('sine',72,t+gap,0.008,0.09,v*0.72,SFX,46,210);O('triangle',150,t,0.006,0.11,v*0.8,SFX,80);N('bandpass',300,1.2,t,0.004,0.06,v*0.5);O('triangle',180,t+gap,0.005,0.08,v*0.6,SFX,95);N('bandpass',340,1.2,t+gap,0.004,0.05,v*0.35);
    hbNext=now+0.36+kd/600*1.0;hbPulse=performance.now();if(kd<220&&active(P))vib([22,Math.round(gap*1000-22),14]);}}
  if(musOn)SET(drone,0.1+(kd<520?0.34*(1-kd/520):0),0.4);
- SET(chase,chasingMe?0.05:((K.state==='search'||K.state==='investigate')&&kd<550?0.03:(kd<260?0.02:0)),0.6);
+ SET(chase,chasingMe?0.16:((K.state==='search'||K.state==='investigate')&&kd<550?0.08:(kd<260?0.05:0)),1.4);
  // гудение щитка
  let h=0;if(P.act&&P.act.k==='repair')h=0.045;else for(const g of G.gens){if(!g.done&&g.p>0&&S.some(s=>s!==P&&active(s)&&dist(s,g)<46)){const d=dist(g,ct);if(d<300)h=Math.max(h,0.022*(1-d/300));}}
  SET(hum,h,0.15);
