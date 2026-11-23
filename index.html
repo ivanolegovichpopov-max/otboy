@@ -17,7 +17,7 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 .vibb{margin-top:14px;font-family:Neucha,system-ui;font-size:18px;background:none;border:1px dashed rgba(233,220,192,.5);color:#d9ccb0;border-radius:12px;padding:6px 16px;cursor:pointer}
 .mp{margin-top:14px;display:flex;flex-direction:column;gap:8px;align-items:center;font-family:Neucha,system-ui}.mp .vibb{margin-top:0}#mpCode{width:84px;font-family:Neucha,system-ui;font-size:20px;text-align:center;padding:5px;border-radius:10px;border:1px dashed rgba(233,220,192,.5);background:#1a140f;color:#f4ead2}#mpMsg{min-height:22px;font-size:18px;color:#f0cf72;max-width:420px}
 .nickrow{font-size:18px;color:#d9ccb0}#nick{width:150px;font-family:Neucha,system-ui;font-size:19px;text-align:center;padding:5px;border-radius:10px;border:1px dashed rgba(233,220,192,.5);background:#1a140f;color:#f4ead2}
-.screen>:first-child{margin-top:auto}.screen>:last-child{margin-bottom:auto}.inroom .how,.inroom .sub,.inroom #vibb{display:none}
+.screen>:first-child{margin-top:auto}.screen>:last-child{margin-bottom:auto}#menu>.pg{margin:auto 0}#menu>.pg:not(#pgMain){padding-top:58px}
 #mpPre{display:flex;flex-direction:column;gap:8px;align-items:center}
 #lobby{display:flex;flex-direction:column;gap:10px;align-items:center;border:2px dashed rgba(233,220,192,.45);border-radius:16px;padding:14px 18px;background:rgba(26,20,15,.72);min-width:270px}
 .lbTitle{font-size:22px;color:#efe3c4}.lbTitle b{font-size:30px;letter-spacing:4px;color:#f0cf72;margin:0 8px 0 4px}
@@ -30,10 +30,25 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 #flashb{position:fixed;right:36px;bottom:192px;width:52px;height:52px;border-radius:50%;border:2px dashed #e9dcc0;outline:5px solid #6b5a3a;outline-offset:-1px;background:#6b5a3a;box-shadow:0 5px 0 rgba(0,0,0,.45);font-size:20px;display:none;color:#fff;padding:0}
 #burstb{position:fixed;right:30px;bottom:116px;width:60px;height:60px;border-radius:50%;border:2px dashed #e9dcc0;outline:5px solid #3f5f80;outline-offset:-1px;background:#3f5f80;box-shadow:0 5px 0 rgba(0,0,0,.45);font-size:24px;display:none;color:#fff;padding:0}
 #throw{position:fixed;right:22px;bottom:26px;width:76px;height:76px;border-radius:50%;border:2px dashed #e9dcc0;outline:5px solid #6b4a2e;outline-offset:-1px;background:#6b4a2e;box-shadow:0 5px 0 rgba(0,0,0,.45);font-size:30px;display:none;color:#fff;padding:0}
+.pg{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:440px;font-family:Neucha,system-ui}.pg.hidden{display:none}
+.back{position:fixed;left:max(14px,env(safe-area-inset-left));top:max(14px,env(safe-area-inset-top));width:48px;height:48px;border-radius:50%;font-family:Neucha,system-ui;font-size:34px;line-height:40px;padding:0;background:#2e241b;color:#f4ead2;border:2px dashed rgba(233,220,192,.6);box-shadow:0 4px 0 rgba(0,0,0,.45);cursor:pointer;z-index:3}
+.mecard{display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(26,20,15,.72);border:2px dashed rgba(233,220,192,.45);border-radius:18px;padding:10px 26px 8px;color:#f4ead2;font-family:Neucha,system-ui;cursor:pointer}
+.mecard img{width:96px;height:144px}.mecard span{font-size:22px}.mecard small{font-size:15px;color:#bfb29a}
+.row2{display:flex;gap:10px;align-items:center}.row2 .vibb{margin:0;font-size:20px;padding:8px 18px}.gear{width:46px;padding:8px 0!important}
+.tiles{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.tile{width:min(160px,42vw);height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:18px;border:2px dashed #e9dcc0;outline:6px solid #8a2f26;outline-offset:-2px;background:#8a2f26;color:#f4ead2;font-family:Neucha,system-ui;box-shadow:0 5px 0 rgba(0,0,0,.45);cursor:pointer}
+.tile:nth-child(2){outline-color:#3f5f80;background:#3f5f80}.tile:active{transform:scale(.97)}.tile .ti{font-size:40px}.tile b{font-weight:400;font-size:26px;white-space:nowrap}.tile small{font-size:16px;opacity:.8}
+.or{font-size:16px;color:#bfb29a;margin-top:6px}.joinrow{display:flex;gap:8px;align-items:center}.joinrow .vibb{margin:0;font-size:20px;padding:6px 18px}
+.card{display:flex;gap:12px;align-items:center;text-align:left;background:rgba(26,20,15,.72);border:2px dashed rgba(233,220,192,.4);border-radius:16px;padding:10px 14px;font-size:17px;line-height:1.35;color:#e9dcc0}
+.card .ci{flex:none;width:64px;height:64px;display:flex;align-items:center;justify-content:center}.card .ci img,.card .ci svg{max-width:64px;max-height:64px}.card b{display:block;font-weight:400;font-size:21px;color:#f0cf72;margin-bottom:2px}
+#howCards{display:flex;flex-direction:column;gap:10px;width:100%}
+.sets{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
+.sw{font-family:Neucha,system-ui;font-size:21px;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:14px;background:rgba(26,20,15,.72);border:2px dashed rgba(233,220,192,.45);color:#f4ead2;cursor:pointer}
+.sw i{font-style:normal;font-size:17px;padding:2px 12px;border-radius:10px;background:#2c6b3a}.sw.off i{background:#5a4a3a;opacity:.8}
 .hidden{display:none!important}
 @media(max-width:520px){h1{font-size:64px;letter-spacing:5px}h2{font-size:32px}.stats{font-size:18px;line-height:1.6}.tb{font-size:14px}.tb td,.tb th{padding:3px 5px}.tb th{font-size:12px}.sub{font-size:14px;margin-bottom:20px}.how{font-size:15px;line-height:1.55;margin-top:18px}.big{padding:12px 30px}}
 @media(max-height:480px){h1{font-size:54px}.sub{margin:2px 0 14px}.how{margin-top:14px}}
-#lookBtn{margin:10px 0 0}#sndBtn{margin:8px 0 0}#sndBox{max-width:340px;margin:8px auto 4px;color:#d9ccb0;font-size:16px}#sndBox.hidden{display:none}#sndBox div{display:flex;align-items:center;gap:6px;margin:5px 0}#sndBox small{flex:1;text-align:left;font-size:15px}#sndBox button{font-family:Neucha,system-ui;font-size:18px;width:54px;height:38px;background:none;border:1px dashed rgba(233,220,192,.55);color:#f0cf72;border-radius:10px;cursor:pointer;padding:0}#lookBox{display:flex;gap:10px;align-items:center;justify-content:center;margin:8px auto 4px;max-width:340px}#lookBox.hidden{display:none}#lookImg{width:84px;height:126px;flex:none}
+#lookBtn{margin:10px 0 0}#sndBtn{margin:8px 0 0}#sndBox{max-width:340px;margin:8px auto 4px;color:#d9ccb0;font-size:16px}#sndBox.hidden{display:none}#sndBox div{display:flex;align-items:center;gap:6px;margin:5px 0}#sndBox small{flex:1;text-align:left;font-size:15px}#sndBox button{font-family:Neucha,system-ui;font-size:18px;width:54px;height:38px;background:none;border:1px dashed rgba(233,220,192,.55);color:#f0cf72;border-radius:10px;cursor:pointer;padding:0}#lookBox{display:flex;gap:10px;align-items:center;justify-content:center;margin:0 auto;max-width:360px;width:100%}#lookImg{width:104px;height:156px;flex:none}
 #lookRows{flex:1;font-size:16px;color:#d9ccb0}.lkr{display:flex;align-items:center;gap:4px;margin:3px 0}.lkr span{flex:1;text-align:center;white-space:nowrap}.lkr small{width:74px;text-align:left;opacity:.7;font-size:14px}
 .lkr button{font-family:Neucha,system-ui;font-size:20px;line-height:1;width:34px;height:30px;background:none;border:1px dashed rgba(233,220,192,.5);color:#d9ccb0;border-radius:9px;cursor:pointer;padding:0}
 </style>
@@ -45,41 +60,57 @@ h2{font-family:Neucha,system-ui;font-weight:400;font-size:44px;margin:0 0 10px;c
 <button id="flashb">🔦</button>
 
 <div id="menu" class="screen">
+ <button class="back hidden" id="back" aria-label="Назад">‹</button>
+ <div class="pg" id="pgMain">
   <h1>ОТБОЙ</h1>
-  <div class="sub">заброшенный пионерлагерь · четверо жертв против охотника · один с ботами или с друзьями</div>
-  <button class="big" id="play">Играть одному</button>
-  <button class="vibb" id="lookBtn">Мой персонаж</button>
-  <button class="vibb" id="sndBtn">Проба звуков</button>
-  <div id="sndBox" class="hidden"></div>
-  <div id="lookBox" class="hidden"><img id="lookImg" alt=""><div id="lookRows"></div></div>
+  <div class="sub">заброшенный пионерлагерь · четверо против охотника</div>
+  <button class="mecard" id="meCard"><img id="meImg" alt=""><span id="meName"></span><small>✎ изменить</small></button>
+  <button class="big" id="goPlay">Играть</button>
+  <div class="row2"><button class="vibb" id="goHow">Как играть</button><button class="vibb gear" id="goSet" aria-label="Настройки">⚙</button></div>
+ </div>
+ <div class="pg hidden" id="pgMode">
+  <h2>Как играем?</h2>
+  <div class="tiles">
+   <button class="tile" id="play"><span class="ti">🌙</span><b>Одному</b><small>с ботами</small></button>
+   <button class="tile" id="goFr"><span class="ti">🤝</span><b>С друзьями</b><small>до 4 человек</small></button>
+  </div>
+ </div>
+ <div class="pg hidden" id="pgFr">
+  <h2 id="frTitle">С друзьями</h2>
   <div class="mp">
-   <div class="nickrow">Ник: <input id="nick" maxlength="12" placeholder="как тебя звать" autocomplete="off"></div>
-   <div id="mpPre"><button class="vibb" id="mpHost">Играть с друзьями: создать комнату</button>
-    <div><input id="mpCode" inputmode="numeric" maxlength="4" placeholder="код"> <button class="vibb" id="mpJoin">Войти в комнату</button></div></div>
+   <div id="mpPre"><button class="big" id="mpHost">Создать комнату</button>
+    <div class="or">или войди по коду друга</div>
+    <div class="joinrow"><input id="mpCode" inputmode="numeric" maxlength="4" placeholder="код"><button class="vibb" id="mpJoin">Войти</button></div></div>
    <div id="lobby" class="hidden">
-    <div class="lbTitle">Комната <b id="lbCode"></b> <button class="vibb" id="lbInv">Пригласить</button></div>
+    <div class="lbTitle">Код <b id="lbCode"></b> <button class="vibb" id="lbInv">Позвать</button></div>
     <div id="lbList"></div>
-    <div id="lbPlay"></div>
-    <button class="vibb" id="lbLeave">Выйти из комнаты</button>
+    <button class="big" id="lbStart">Начать матч</button>
    </div>
    <div id="mpMsg"></div></div>
-  <button class="vibb" id="vibb"></button>
-  <div class="how">
-    <b>Цель:</b> почини 5 щитков ⚡ из 7, открой ворота рычагом и беги. Через 8 минут ворота откроются сами.<br>
-    <b>Ремонт:</b> встань у щитка и не двигайся. При свете ремонт идёт быстро, в темноте — вдвое медленнее. Свет годится любой: свой фонарик, лампа или луч товарища — если светит один, второму включать не нужно. Появится круг со стрелкой — нажми, когда она в жёлтой зоне. Промах — взрыв, и охотник идёт на шум.<br>
-    <b>Прятки:</b> свет и фонарик выдают тебя, кусты и стены прячут. В шкафчик или ящик — встань и замри. Без света ты вдвое медленнее и всё делаешь вдвое дольше — об этом напоминает синий значок с луной. Убегать в темноте тоже труднее.<br>
-    <b>Охотник:</b> первый удар ранит, второй — уносит в кладовку. Постой у кладовки, чтобы выпустить пойманного. Третья кладовка — выбываешь.<br>
-    <b>Защита:</b> перепрыгни заборчик, сделай рывок, посвети охотнику фонариком в лицо — ослепишь. Фонарик — роскошь: заряда на минуту, батарейки редки, сам он подзаряжается медленно и только пока выключен.<br>
-    <b>ПК:</b> WASD — бег, Ctrl — тихий шаг, мышь — куда светить, Shift — рывок, F — фонарик, Пробел — действие.<br>
-    <b>Телефон, одной рукой:</b> веди пальцем в любом месте экрана. Едва сдвинул — поворот на месте, дальше — тихий шаг, ещё дальше — бег, далеко за внешний синий круг — рывок. Короткое касание — включить или выключить фонарик, он светит туда, куда идёшь. Второй палец наводит фонарик отдельно. Синий значок рядом с батарейкой показывает, готов ли рывок.
-  </div>
+ </div>
+ <div class="pg hidden" id="pgLook">
+  <h2>Мой персонаж</h2>
+  <div class="nickrow"><input id="nick" maxlength="12" placeholder="твоё имя" autocomplete="off"></div>
+  <div id="lookBox"><img id="lookImg" alt=""><div id="lookRows"></div></div>
+  <button class="big" id="lookOk">Готово</button>
+ </div>
+ <div class="pg hidden" id="pgHow">
+  <h2>Как играть</h2>
+  <div id="howCards"></div>
+  <button class="big" id="howOk">Понятно</button>
+ </div>
+ <div class="pg hidden" id="pgSet">
+  <h2>Настройки</h2>
+  <div class="sets"><button class="sw" id="sndSw"></button><button class="sw" id="vibb"></button></div>
+  <button class="big" id="setOk">Готово</button>
+ </div>
 </div>
 
 <div id="end" class="screen hidden">
   <h2 id="endTitle"></h2>
   <div class="stats" id="endStats"></div>
   <button class="big" id="again">Ещё раз</button>
-  <div><button class="vibb hidden" id="toLobby">В комнату</button></div>
+  <div><button class="vibb" id="toLobby">В меню</button></div>
 </div>
 
 <!-- Записи из библиотеки Pixabay (папка snd: exp, p1-p3, g1, g2, dog, gr1, gr2, mask, gate, click, buzz, zap, snap, jump, grass, owl) используются по лицензии Pixabay Content License. -->
@@ -229,7 +260,7 @@ function impulse(sec,decay){const n=AC.sampleRate*sec|0,b=AC.createBuffer(2,n,AC
 function buildAudio(){
  const comp=AC.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=6;try{comp.attack.value=0.002;comp.release.value=0.18;}catch(e){}
  // мягкий ограничитель на выходе: громкие удары не хрипят
- {const cl=AC.createWaveShaper(),n=2048,c2=new Float32Array(n);for(let i=0;i<n;i++){const x=(i/(n-1)*2-1)*2.2;c2[i]=Math.tanh(x*0.95);}cl.curve=c2;const pre=AC.createGain();pre.gain.value=1/2.2;comp.connect(pre).connect(cl).connect(AC.destination);}
+ {const cl=AC.createWaveShaper(),n=2048,c2=new Float32Array(n);for(let i=0;i<n;i++){const x=(i/(n-1)*2-1)*2.2;c2[i]=Math.tanh(x*0.95);}cl.curve=c2;const pre=AC.createGain();pre.gain.value=1/2.2;VOLG=AC.createGain();VOLG.gain.value=sndOn?1:0;comp.connect(pre).connect(cl).connect(VOLG).connect(AC.destination);}
  const M=AC.createGain();M.gain.value=0.9;M.connect(comp);
  REVIN=AC.createConvolver();REVIN.buffer=impulse(2.8,2.4);const rg=AC.createGain();rg.gain.value=0.45;REVIN.connect(rg).connect(M);
  SFX=AC.createGain();SFX.connect(M);const s1=AC.createGain();s1.gain.value=0.25;SFX.connect(s1).connect(REVIN);
@@ -793,7 +824,7 @@ function startSearch(x,y){K.state='search';const pts=[{x,y,k:'spot'}];
  if(dist(K,camTarget())<600&&camTarget()!==K)sfx('sting');}
 function down(t,a){t.wig=0;if(t.trapped){t.trapped.q.state='sprung';t.trapped.q.who=null;t.trapped=null;}t.state='carried';t.hidden=false;t.fallX=t.x;t.fallY=t.y;t.fallSide=Math.cos(a==null?Math.atan2(t.y-K.y,t.x-K.x):a)>=0?1:-1;K.pickT=2.2;sfx('hit'+Math.max(0,S.indexOf(t)));later(270,()=>sfx('fall'));let best=null,bd=1e9;for(const c of G.closets){if(c.who)continue;const d=dist(c,K);if(d<bd){bd=d;best=c;}}
  K.state='carry';K.carry=t;K.closet=best;K.wipe=1.5;K.goal=null;K.target=null;}
-let vibOn=true;try{vibOn=localStorage.getItem('otboy_vib')!=='0';}catch(e){}
+let VOLG=null,sndOn=true;try{sndOn=localStorage.getItem('otboy_snd')!=='0';}catch(e){}let vibOn=true;try{vibOn=localStorage.getItem('otboy_vib')!=='0';}catch(e){}
 const isTouch=matchMedia('(pointer:coarse)').matches;
 let rumbleT=0,rumbleA=0,flashA=0,flashStrobe=false,hapL=null;
 try{const l=document.createElement('label');l.style.cssText='position:fixed;left:-99px;top:-99px;opacity:0;pointer-events:none';const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');l.appendChild(i);document.body.appendChild(l);hapL=l;}catch(e){}
@@ -1837,16 +1868,16 @@ function mpJoin(){initAudio();sfx('uiclick');const code=($('mpCode').value||'').
   netSend({t:'hello'});if(NET.hello)clearInterval(NET.hello);NET.hello=setInterval(()=>{if(!NET.live)netSend({t:'hello'});},1500);});}
 const SLOT_COL=['#d9a82b','#6b4423','#c0622a','#222'],SLOT_BOT=['Саша','Лёша','Маша','Димка'];
 function nickVal(){return ($('nick').value||'').replace(/\s+/g,' ').trim().slice(0,12);}
-function lobbyShow(){const lb=$('lobby');$('menu').classList.add('inroom');$('mpPre').classList.add('hidden');lb.classList.remove('hidden');$('lbCode').textContent=NET.code;
- const pb=$('play');if(pb.parentNode!==$('lbPlay'))$('lbPlay').appendChild(pb);pb.style.display='';pb.textContent=NET.run?'Войти в матч':'Начать матч';
+function lobbyShow(){if(SRV)return;const lb=$('lobby');$('mpPre').classList.add('hidden');lb.classList.remove('hidden');$('lbCode').textContent=NET.code;$('frTitle').textContent='Комната';if(curPg!=='pgFr'&&!$('menu').classList.contains('hidden'))go('pgFr');
+ const pb=$('lbStart');pb.textContent=NET.run?'Войти в матч':'Начать матч';
  const box=$('lbList');box.textContent='';
  for(let i=0;i<4;i++){const p=NET.pl.find(q=>q.i===i),row=document.createElement('div');row.className='lbRow'+(p?(i===NET.slot?' me':''):' bot');
   const im=document.createElement('img');im.src=survImg({col:SLOT_COL[i],state:'ok',lk:p&&p.look?p.look:(i===NET.slot?myLook():'')}).src;im.alt='';row.appendChild(im);
   const nm=document.createElement('span');nm.textContent=p?p.name:SLOT_BOT[i];row.appendChild(nm);
   const tg=document.createElement('small');tg.textContent=p?(i===NET.slot?'это ты':'игрок'):'бот';row.appendChild(tg);box.appendChild(row);}
  lobbyMsg(NET.run?'Матч уже идёт — зайдёшь за бота':(NET.pl.length<2?'Позови друзей: скажи код или нажми «Пригласить»':'Начать может любой из комнаты'));
- $('toLobby').classList.remove('hidden');}
-function lobbyHide(){$('menu').classList.remove('inroom');$('lobby').classList.add('hidden');$('mpPre').classList.remove('hidden');const pb=$('play'),mp=document.querySelector('.mp');if(pb.parentNode!==mp.parentNode)mp.parentNode.insertBefore(pb,mp);pb.textContent='Играть одному';pb.style.display='';$('toLobby').classList.add('hidden');}
+$('toLobby').textContent='В комнату';}
+function lobbyHide(){$('lobby').classList.add('hidden');$('mpPre').classList.remove('hidden');$('frTitle').textContent='С друзьями';$('toLobby').textContent='В меню';}
 function srvLeave(){sfx('uiclick');netSend({t:'leave'});const w=NET.ws;NET.code='';NET.ws=null;NET.tx=null;try{if(w)w.close();}catch(e){}NET.role=null;NET.srv=false;NET.live=false;NET.pl=[];lobbyHide();lobbyMsg('');}
 function srvInvite(){const url=location.origin+location.pathname+'#r='+NET.code,txt='Заходи в «Отбой», комната '+NET.code;
  if(navigator.share){navigator.share({title:'Отбой',text:txt,url}).catch(()=>{});return;}
@@ -1862,16 +1893,16 @@ function srvConnect(onOpen,onFail){const t0=performance.now();let tries=0;srvWak
 function srvJoin(code){initAudio();sfx('uiclick');if(NET.ws){try{const w=NET.ws;NET.ws=null;NET.code='';w.close();}catch(e){}}NET.role='guest';NET.srv=true;NET.live=false;NET.code='';lobbyMsg('Подключаемся к серверу…');
  srvConnect(()=>{netSend(code?{t:'join',v:VER,code,name:nickVal(),look:myLook()}:{t:'join',v:VER,create:1,name:nickVal(),look:myLook()});},()=>{NET.role=null;NET.srv=false;lobbyMsg('Сервер недоступен. По сети игра работает только по отдельной ссылке, не внутри Claude. Если ты по ссылке — попробуй позже.');});}
 setInterval(()=>{if(NET.srv&&NET.ws)srvWake();},240000);
-if(!SRV){(function(){const box=$('sndBox');[['Удар охотника','hit'],['Взрыв щитка','exp'],['Щиток заведён','gen'],['Запись 1','r1'],['Запись 2','r2'],['Запись 3','r3']].forEach(([t,k])=>{const r=document.createElement('div'),lb=document.createElement('small');lb.textContent=t;r.appendChild(lb);['A','B','C'].forEach((v,i)=>{const b=document.createElement('button');b.textContent=['А','Б','В'][i];b.onclick=()=>{initAudio();try{AC.resume();}catch(e){}setTimeout(()=>sfx(k+v,1),60);};r.appendChild(b);});box.appendChild(r);});$('sndBtn').onclick=()=>{initAudio();box.classList.toggle('hidden');};})();
+if(!SRV){
  (function(){let L=lookArr(myLook());const rows=$('lookRows'),img=$('lookImg'),vals=[];
   const show=()=>{const lk=L.join('');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(survSVG('#d9a82b',false,lk));vals.forEach((v,i)=>v.textContent=LOOK_V[i][L[i]]);};
   const set=(i,d)=>{const ls=i===2?HG[L[0]]:i===6?BG[L[0]]:null;if(ls)L[i]=ls[(ls.indexOf(L[i])+d+ls.length)%ls.length];else L[i]=(L[i]+d+LOOK_N[i])%LOOK_N[i];L=lookFix(L);try{localStorage.setItem('otboy_look',L.join(''));}catch(e){}show();try{sfx('uiclick');}catch(e){}if(NET.srv&&NET.ws)netSend({t:'name',name:nickVal(),look:L.join('')});};
   LOOK_T.forEach((t,i)=>{const r=document.createElement('div');r.className='lkr';const lb=document.createElement('small');lb.textContent=t;const a=document.createElement('button');a.textContent='‹';const v=document.createElement('span');const b=document.createElement('button');b.textContent='›';a.onclick=()=>set(i,-1);b.onclick=()=>set(i,1);vals.push(v);r.append(lb,a,v,b);rows.appendChild(r);});
-  $('lookBtn').onclick=()=>{$('lookBox').classList.toggle('hidden');show();};show();})();
+  window.lookShow=show;show();})();
  try{$('nick').value=localStorage.getItem('otboy_nick')||'';}catch(e){}
  $('nick').addEventListener('change',()=>{const v=nickVal();$('nick').value=v;try{localStorage.setItem('otboy_nick',v);}catch(e){}if(NET.srv&&NET.ws&&v)netSend({t:'name',name:v});});
- $('lbLeave').onclick=srvLeave;$('lbInv').onclick=srvInvite;$('toLobby').onclick=()=>{$('end').classList.add('hidden');$('menu').classList.remove('hidden');if(NET.srv)lobbyShow();};
- {const r=/r=(\d{4})/.exec(location.hash);if(r){$('mpCode').value=r[1];lobbyMsg('Тебя позвали в комнату '+r[1]+' — впиши ник и жми «Войти в комнату»');}}}
+ $('lbInv').onclick=srvInvite;$('toLobby').onclick=()=>{$('end').classList.add('hidden');$('menu').classList.remove('hidden');if(NET.srv&&NET.code){go('pgFr');lobbyShow();}else go('pgMain');};
+ {const r=/r=(\d{4})/.exec(location.hash);if(r){$('mpCode').value=r[1];go('pgFr');lobbyMsg('Тебя позвали в комнату '+r[1]+' — жми «Войти»');}}}
 if(!SRV){if(location.hash.indexOf('bc')>=0){$('mpHost').onclick=mpHost;$('mpJoin').onclick=mpJoin;}
  else{$('mpHost').onclick=()=>srvJoin(null);$('mpJoin').onclick=()=>{const code=($('mpCode').value||'').trim();if(code.length<4){lobbyMsg('Введи код из 4 цифр');return;}srvJoin(code);};}}
 let last=0;
@@ -1915,7 +1946,32 @@ function showEnd(){running=false;musicStop();sfx(P.state==='escaped'?'endwin':'e
  $('end').classList.remove('hidden');}
 function start(){if(NET.srv){initAudio();sfx('uiclick');if(NET.ws)netSend({t:'start'});else lobbyMsg('Нет связи с сервером');return;}if(NET.role==='guest')return;initAudio();sfx('uiclick');newGame();if(hosting()){S[1].remote=true;S[1].name='Друг';S[1].inAge=0;S[1].clk={};netSend({t:'init',L:layout()});}$('menu').classList.add('hidden');$('end').classList.add('hidden');running=true;last=0;musicStart();}
 $('play').onclick=start;
-function vibLabel(){$('vibb').textContent='📳 Вибрация: '+(vibOn?'вкл':'выкл');$('vibb').style.display=isTouch?'inline-block':'none';}vibLabel();
+let curPg='pgMain';const PGBACK={pgMode:'pgMain',pgFr:'pgMode',pgLook:'pgMain',pgHow:'pgMain',pgSet:'pgMain'};
+function go(id){curPg=id;document.querySelectorAll('#menu .pg').forEach(e=>e.classList.toggle('hidden',e.id!==id));$('back').classList.toggle('hidden',id==='pgMain');$('menu').scrollTop=0;if(id==='pgMain')meShow();if(id==='pgLook'&&window.lookShow)lookShow();}
+function meShow(){const lk=myLook();$('meImg').src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(survSVG('#d9a82b',false,lk));$('meName').textContent=nickVal()||'Без имени';}
+if(!SRV){
+const navTap=f=>()=>{try{initAudio();sfx('uiclick');}catch(e){}f();};
+$('back').onclick=navTap(()=>{if(curPg==='pgFr'&&NET.srv&&NET.code){srvLeave();}go(PGBACK[curPg]||'pgMain');});
+$('goPlay').onclick=navTap(()=>go('pgMode'));$('goFr').onclick=navTap(()=>go('pgFr'));$('meCard').onclick=navTap(()=>go('pgLook'));
+$('goHow').onclick=navTap(()=>go('pgHow'));$('goSet').onclick=navTap(()=>go('pgSet'));
+$('lookOk').onclick=navTap(()=>{const v=nickVal();$('nick').value=v;try{localStorage.setItem('otboy_nick',v);}catch(e){}go('pgMain');});$('howOk').onclick=navTap(()=>go('pgMain'));$('setOk').onclick=navTap(()=>go('pgMain'));
+$('lbStart').onclick=start;
+function sndLabel(){$('sndSw').innerHTML='Звук <i>'+(sndOn?'вкл':'выкл')+'</i>';$('sndSw').classList.toggle('off',!sndOn);if(VOLG)VOLG.gain.value=sndOn?1:0;}
+$('sndSw').onclick=()=>{sndOn=!sndOn;try{localStorage.setItem('otboy_snd',sndOn?'1':'0');}catch(e){}initAudio();sndLabel();if(sndOn)try{sfx('uiclick');}catch(e){}};sndLabel();
+{const ic=(b)=>'<svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="28" fill="#2e241b" stroke="#e9dcc0" stroke-width="2" stroke-dasharray="5 4"/>'+b+'</svg>',
+ Z='<path d="M36 12 L20 36 H31 L27 52 L44 27 H33 Z" fill="#f0cf72" stroke="#140d08" stroke-width="2.5" stroke-linejoin="round"/>',
+ EY='<path d="M12 32 Q32 14 52 32 Q32 50 12 32Z" fill="#f4ead2" stroke="#140d08" stroke-width="2.5"/><circle cx="32" cy="32" r="8" fill="#3f5f80"/><circle cx="32" cy="32" r="3.5" fill="#140d08"/>',
+ FL='<path d="M14 36 L30 30 L30 40 Z" fill="#9fb4e6" opacity=".55"/><rect x="30" y="27" width="22" height="14" rx="3" fill="#6b5a3a" stroke="#140d08" stroke-width="2.5"/><rect x="26" y="25" width="7" height="18" rx="2" fill="#d9ccb0" stroke="#140d08" stroke-width="2.5"/>',
+ im=(svg,w)=>'<div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,#6a3a30,#2e241b 70%);border:2px dashed #e9dcc0;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;overflow:hidden"><img src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)+'" style="height:58px;width:auto" alt=""></div>',
+ C=[[ic(Z),'Цель','Почини 5 щитков из 7, дёрни рычаг ворот и беги. Через 8 минут ворота откроются сами.'],
+  [ic(Z.replace('#f0cf72','#9fb4e6')),'Ремонт','Встань у щитка и замри. При свете — быстро, в темноте — вдвое медленнее. Круг со стрелкой: жми, когда она в жёлтой зоне. Промах — взрыв, охотник услышит.'],
+  [ic(EY),'Прятки','Свет выдаёт, кусты и стены прячут. Шкафчик или ящик — встань и замри. Без света ты медленнее.'],
+  [im(KILLER_SVG),'Охотник','Первый удар ранит, второй — уносит в кладовку. Постой у кладовки, чтобы выпустить друга. Третья кладовка — выбыл.'],
+  [ic(FL),'Защита и управление',(isTouch?'Веди пальцем: чуть — идёшь, дальше — бежишь, за кругом — рывок. Тап вторым пальцем или короткий тап на месте — фонарик. ':'WASD — бег, Ctrl — тихо, мышь — свет, Shift — рывок, F — фонарик, Пробел — действие. ')+'Фонарь в лицо ослепит охотника, но заряда — на минуту.']];
+ const box=$('howCards');C.forEach(([i,t,x])=>{const d=document.createElement('div');d.className='card';d.innerHTML='<div class="ci">'+i+'</div><div><b>'+t+'</b>'+x+'</div>';box.appendChild(d);});}
+go('pgMain');}
+
+function vibLabel(){$('vibb').innerHTML='Вибрация <i>'+(vibOn?'вкл':'выкл')+'</i>';$('vibb').classList.toggle('off',!vibOn);$('vibb').style.display=isTouch?'':'none';}vibLabel();
 $('vibb').onclick=()=>{vibOn=!vibOn;try{localStorage.setItem('otboy_vib',vibOn?'1':'0');}catch(e){}vibLabel();vib(30);};$('again').onclick=()=>{if(NET.srv){netSend({t:'start'});return;}if(NET.role==='guest'){$('endTitle').textContent='Ждём, пока друг начнёт заново…';return;}start();};
 document.addEventListener('visibilitychange',()=>{paused=document.hidden;resetInput();try{if(AC)paused?AC.suspend():AC.resume();}catch(e){}});
 </script>
