@@ -1746,12 +1746,17 @@ function drawHUD(){
 function msg(t){tbox(t,botCx(),VH-28,Math.min(botW(),400),17,'#f0b0a0',1);}
 let lastBtn='',camLX=0,camLY=0,rimC=null,rimX=null;
 // в доме: улица за стенами уходит в темноту; охотника снаружи выдают только красные окна и отсвет с его стороны
-function bldBox(b){if(b._bx)return b._bx;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const o of rects)if(o.b===b&&(o.kind==='wall'||o.kind==='door')){x0=Math.min(x0,o.x);y0=Math.min(y0,o.y);x1=Math.max(x1,o.x+o.w);y1=Math.max(y1,o.y+o.h);}if(x0>x1){x0=b.x;y0=b.y;x1=b.x+b.w;y1=b.y+b.h;}return b._bx=[x0-2,y0-WALLH-2,x1+2,y1+2];}
+function bldBox(b){if(b._bx)return b._bx;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const o of rects)if(o.b===b&&(o.kind==='wall'||o.kind==='door')){x0=Math.min(x0,o.x);y0=Math.min(y0,o.y);x1=Math.max(x1,o.x+o.w);y1=Math.max(y1,o.y+o.h);}if(x0>x1){x0=b.x;y0=b.y;x1=b.x+b.w;y1=b.y+b.h;}return b._bx=[x0-2,y0-2,x1+2,y1+2];}
 function drawIndoor(T){const c=camTarget();if(!c||c===K)return;let b=null;for(const q of buildings)if(c.x>q.x&&c.x<q.x+q.w&&c.y>q.y&&c.y<q.y+q.h){b=q;break;}
  const want=b&&G.intro<=0?1:0;if(b)G.inB=b;G.inK=(G.inK||0)+(want-(G.inK||0))*0.12;if(G.inK<0.01){G.inK=0;return;}b=G.inB;if(!b)return;
  const k=G.inK*(1-Math.min(1,G.litK||0)*0.85),B=bldBox(b),x0=camX-VW/SC,y0=camY-VH/SC,x1=camX+VW/SC,y1=camY+VH/SC;
- ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);ctx.save();ctx.beginPath();ctx.rect(x0,y0,x1-x0,y1-y0);ctx.rect(B[0],B[1],B[2]-B[0],B[3]-B[1]);ctx.clip('evenodd');
- ctx.fillStyle='rgba(3,4,8,'+(0.97*k).toFixed(3)+')';ctx.fillRect(x0,y0,x1-x0,y1-y0);
+ const E=70,hT=16+(WALLH-16)*(b.hK!=null?b.hK:1),bx0=B[0],by0=B[1]-hT,bx1=B[2],by1=B[3],a=0.97*k,a0=0.3*k,dk=v=>'rgba(3,4,8,'+v.toFixed(3)+')';
+ ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);ctx.save();ctx.beginPath();ctx.rect(x0,y0,x1-x0,y1-y0);ctx.rect(bx0-E,by0-E,bx1-bx0+2*E,by1-by0+2*E);ctx.fillStyle=dk(a);ctx.fill('evenodd');
+ // мягкая кромка вокруг дома: чуть видно землю у стен, дальше — темнота
+ const lin=(gx0,gy0,gx1,gy1,rx,ry,rw,rh)=>{const g=ctx.createLinearGradient(gx0,gy0,gx1,gy1);g.addColorStop(0,dk(a0));g.addColorStop(1,dk(a));ctx.fillStyle=g;ctx.fillRect(rx,ry,rw,rh);};
+ lin(0,by0,0,by0-E,bx0,by0-E,bx1-bx0,E);lin(0,by1,0,by1+E,bx0,by1,bx1-bx0,E);lin(bx0,0,bx0-E,0,bx0-E,by0,E,by1-by0);lin(bx1,0,bx1+E,0,bx1,by0,E,by1-by0);
+ for(const [cx,cy,rx,ry] of [[bx0,by0,bx0-E,by0-E],[bx1,by0,bx1,by0-E],[bx0,by1,bx0-E,by1],[bx1,by1,bx1,by1]]){const g=ctx.createRadialGradient(cx,cy,0,cx,cy,E);g.addColorStop(0,dk(a0));g.addColorStop(1,dk(a));ctx.fillStyle=g;ctx.fillRect(rx,ry,E,E);}
+ ctx.beginPath();ctx.rect(x0,y0,x1-x0,y1-y0);ctx.rect(bx0,by0,bx1-bx0,by1-by0);ctx.clip('evenodd');
  const kIn=K.x>b.x&&K.x<b.x+b.w&&K.y>b.y&&K.y<b.y+b.h,kd=dist(c,K);
  if(!kIn&&kd<720&&G.over!==true){const pr=(1-kd/720)*k,pl=0.85+0.15*Math.sin(G.t*3.1),mx=VW/SC/2-30,my=VH/SC/2-30,hx=clamp(K.x,camX-mx,camX+mx),hy=clamp(K.y,camY-my,camY+my),g=ctx.createRadialGradient(hx,hy,10,hx,hy,320);
   g.addColorStop(0,'rgba(150,14,8,'+(0.45*pr*pl).toFixed(3)+')');g.addColorStop(1,'rgba(150,14,8,0)');ctx.fillStyle=g;ctx.fillRect(hx-320,hy-320,640,640);}
