@@ -216,13 +216,13 @@ function seeKiller(o){if(o===K)return 1;const d=dist(o,K);if(d<70)return 1;if(!l
  return 0;}
 
 // ---------- звук (всё синтезируется, без писка) ----------
-let HV=null,AMB=null,KB=null,APAN=null,KPAN=null,musLen=40,AC=null,SFX,MUS,REVIN,NOISE,drone,wind,hum,chase,musOn=false,musNext=0,musStep=0,hbNext=0,owlT=15;
+let HV=null,AMB=null,KB=null,APAN=null,KPAN=null,musLen=150,AC=null,SFX,MUS,REVIN,NOISE,drone,wind,hum,chase,musOn=false,musNext=0,musStep=0,hbNext=0,owlT=15;
 let silentEl=null;
 function iosAudioSession(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
  try{if(!silentEl){const sr=8000,n=sr/4,buf=new ArrayBuffer(44+n),v=new DataView(buf),W=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};W(0,'RIFF');v.setUint32(4,36+n,true);W(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr,true);v.setUint16(32,1,true);v.setUint16(34,8,true);W(36,'data');v.setUint32(40,n,true);for(let i=0;i<n;i++)v.setUint8(44+i,128);
    silentEl=new Audio(URL.createObjectURL(new Blob([buf],{type:'audio/wav'})));silentEl.loop=true;silentEl.setAttribute('playsinline','');}
   const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(e){}}
-function initAudio(){try{iosAudioSession();if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();buildAudio();}if(AC.state!=='running')AC.resume();}catch(e){AC=null;}}
+function initAudio(){try{iosAudioSession();if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();buildAudio();loadBeds();}if(AC.state!=='running')AC.resume();}catch(e){AC=null;}}
 for(const ev of['pointerdown','touchend','keydown','click'])addEventListener(ev,()=>{try{if(AC&&AC.state!=='running'){AC.resume();iosAudioSession();}}catch(e){}},true);
 function impulse(sec,decay){const n=AC.sampleRate*sec|0,b=AC.createBuffer(2,n,AC.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let y=0;for(let i=0;i<n;i++){const k=i/n,a=0.5*Math.pow(1-k,2)+0.04;y+=a*((Math.random()*2-1)-y);d[i]=y*2.2*Math.pow(1-k,decay);}}return b;}
 function buildAudio(){
@@ -304,10 +304,12 @@ function PLAYD(k,t,v,rate,x,y){if(!SMPSRC[k])return;const c=camTarget(),d=Math.h
 // какие записи кому: мальчик/девочка, близко/далеко — выбирается случайно
 const VSET={bn:[['s1',1.3]],gn:[['s3',1.62]],bf:[['s3',1],['s2',1.3],['s2',1]],gf:[['s2',1.62]]};
 function voice(s,t,kind){const c=camTarget(),d=dist(c,s),girl=lookArr(s.lk)[0]===1,far=kind==='chase'||d>330,set=VSET[(girl?'g':'b')+(far?'f':'n')],p=set[Math.floor(Math.random()*set.length)];PLAYD(p[0],t,kind==='cage'?0.6:0.95,p[1]*(0.96+Math.random()*0.08),s.x,s.y);}
-const BED={},BEDG={};let bedsOn=false;
-function loadBeds(){if(bedsOn||SRV||!AC)return;bedsOn=true;const bus=AC.createGain();bus.gain.value=1;bus.connect(SFX);
- for(const k of ['night','wind','dread','woosh'])fetch('snd/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer();}).then(b=>new Promise((ok,no)=>AC.decodeAudioData(b,ok,no))).then(buf=>{BED[k]=buf;if(k==='woosh')return;
-   const src=AC.createBufferSource(),g=AC.createGain();src.buffer=buf;src.loop=true;g.gain.value=0;src.connect(g).connect(bus);src.start(0,Math.random()*buf.duration);BEDG[k]=g;}).catch(()=>{});}
+const BED={},BEDG={},BEDRAW={},BEDLOOP={"night": 47.3207, "wind": 12.84, "dread": 8.2816};let bedsOn=false,bedBus=null;
+// файлы качаются сразу при открытии страницы, раскодируются при первом касании (когда появляется звук)
+if(typeof fetch==='function'&&typeof SRV!=='undefined'&&!SRV)for(const k of ['night','wind','dread','woosh'])fetch('snd/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer();}).then(b=>{BEDRAW[k]=b;if(AC)bedDecode(k);}).catch(()=>{});
+function bedDecode(k){const raw=BEDRAW[k];if(!raw||BED[k]||!AC)return;delete BEDRAW[k];AC.decodeAudioData(raw,buf=>{BED[k]=buf;if(k==='woosh')return;if(!bedBus){bedBus=AC.createGain();bedBus.connect(SFX);}
+  const src=AC.createBufferSource(),g=AC.createGain();src.buffer=buf;src.loop=true;src.loopStart=0.2;src.loopEnd=0.2+BEDLOOP[k];g.gain.value=0;src.connect(g).connect(bedBus);src.start(0,0.2+Math.random()*BEDLOOP[k]*0.9);BEDG[k]=g;},()=>{});}
+function loadBeds(){if(SRV||!AC)return;for(const k in BEDRAW)bedDecode(k);}
 function bedSet(k,v,tc){const g=BEDG[k];if(g)g.gain.setTargetAtTime(v,AC.currentTime,tc||0.8);}
 function bedShot(k,v,rate){const b=BED[k];if(!b)return false;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.playbackRate.value=rate||1;g.gain.value=v;s.connect(g).connect(AMB||SFX);s.start();return true;}
 let SPOS=null;const at=(x,y)=>{SPOS=[Math.round(x),Math.round(y)];};
@@ -421,7 +423,7 @@ function motif(t,base,step,vol,fn,notes){const nn=notes||[7,7,8,7,3],R=[2,1,1,1,
 function musicStart(){if(!AC)return;musOn=true;musNext=AC.currentTime+0.25;musStep=0;hbNext=0;SET(MUS,1,0.4);SET(drone,0,1.5);SET(wind,0,2);loadBeds();}
 function musicStop(){if(!AC)return;musOn=false;SET(MUS,0,0.6);SET(drone,0,1);SET(wind,0,1.5);SET(hum,0,0.3);SET(chase,0,0.5);for(const k in BEDG)bedSet(k,0,0.5);}
 function musicTick(){if(!AC||!musOn)return;const now=AC.currentTime,chT=chaseNear();
- while(musNext<now+0.3){chI+=(chT-chI)*(chT>chI?0.09:0.2);const ch0=chI>0.5;if(musStep%192===0)musLen=20+Math.floor(Math.random()*28);const gate=(musStep%192)<musLen;const i=musStep%48,bar=(i/3|0),beat=i%3,bt=BT*(1+0.045*Math.sin(musStep*0.11)),s=MELA[i],ch=CHS[CHSEQ[bar]];
+ while(musNext<now+0.3){chI+=(chT-chI)*(chT>chI?0.09:0.2);const ch0=chI>0.5;if(musStep%192===0)musLen=120+Math.floor(Math.random()*56);const gate=(musStep%192)<musLen;const i=musStep%48,bar=(i/3|0),beat=i%3,bt=BT*(1+0.045*Math.sin(musStep*0.11)),s=MELA[i],ch=CHS[CHSEQ[bar]];
   if(gate&&s!==null&&Math.random()>0.03)mbox(440*Math.pow(2,(s+(Math.random()-0.5)*0.1)/12),musNext,ch0?0.03:0.085,MUS);
   if(gate&&beat===0)O('triangle',110*Math.pow(2,ch.r/12),musNext,0.03,bt*2.6,ch0?0.05:0.1,MUS,null,320);
   else if(gate&&!ch0){mbox(220*Math.pow(2,ch.n[0]/12),musNext,0.02,MUS);mbox(220*Math.pow(2,ch.n[1]/12),musNext,0.02,MUS);}
@@ -456,8 +458,8 @@ function audioTick(dt){if(!AC||!musOn)return;musicTick();const now=AC.currentTim
  // сердцебиение: «тук-тук», в такт с пульсацией краёв экрана и вибрацией
  if(kd<600){if(hbNext<now){const v=0.18+0.5*(1-kd/600),t=now+0.01,gap=0.13+0.07*kd/600;O('sine',56,t,0.01,0.13,v,SFX,38,170);N('lowpass',120,0.7,t,0.005,0.08,v*0.5);O('sine',72,t+gap,0.008,0.09,v*0.72,SFX,46,210);O('triangle',150,t,0.006,0.11,v*0.8,SFX,80);N('bandpass',300,1.2,t,0.004,0.06,v*0.5);O('triangle',180,t+gap,0.005,0.08,v*0.6,SFX,95);N('bandpass',340,1.2,t+gap,0.004,0.05,v*0.35);
    hbNext=now+0.36+kd/600*1.0;hbPulse=performance.now();if(kd<220&&active(P))vib([22,Math.round(gap*1000-22),14]);}}
- if(musOn){const out=!inBuilding(ct);bedSet('night',G.litK>0.5?0.3:(out?0.6:0.22),1.2);bedSet('wind',(out?1:0.35)*(0.2+0.16*Math.sin(now*0.13)+0.1*Math.sin(now*0.047+1)),1.5);}
- {const cn=chaseNear();SET(chase,0,0.5);bedSet('dread',cn>=1?0.75:cn>0?0.25+0.4*cn:((K.state==='search'||K.state==='investigate')&&kd<480?0.22:0),1.6);
+ if(musOn){const out=!inBuilding(ct);bedSet('night',G.litK>0.5?0.1:(out?0.2:0.08),1.2);bedSet('wind',(out?1:0.35)*(0.09+0.06*Math.sin(now*0.13)+0.04*Math.sin(now*0.047+1)),1.5);}
+ {const cn=chaseNear();SET(chase,0,0.5);bedSet('dread',cn>=1?0.4:cn>0?0.12+0.22*cn:((K.state==='search'||K.state==='investigate')&&kd<480?0.1:0),1.6);
   // рядом гонятся за товарищем: слышен его крик
   if(cn>0&&cn<1&&K.target&&K.target!==P){G.scrT=(G.scrT==null?1.5:G.scrT)-dt;if(G.scrT<=0){G.scrT=5+Math.random()*4;const tg=K.target;if(APAN)try{APAN.pan.setValueAtTime(clamp((tg.x-ct.x)/380,-1,1),now);}catch(e){}voice(tg,now+0.02,'chase');}}else G.scrT=1.5;}
  // гудение щитка
