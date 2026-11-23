@@ -928,8 +928,8 @@ function killerRemote(dt){if(!K.local){K.inAge=(K.inAge||0)+dt;if(K.inAge>7){rel
  G.kn=G.kn||[];for(const q of G.noises)if(dist(K,q)<q.r&&!G.kn.some(o=>Math.hypot(o.x-q.x,o.y-q.y)<60&&G.t-o.t<1.5)){G.kn.push({x:q.x,y:q.y,t:G.t,id:G.knN=(G.knN||0)+1});if(K.local){G.knL.push({x:q.x,y:q.y,t:G.t});if(Math.hypot(q.x-K.x,q.y-K.y)>160)sfx('sting',0.5);}}G.noises.length=0;if(G.kn.length&&G.t-G.kn[0].t>3)G.kn=G.kn.filter(o=>G.t-o.t<3);
  if(K.kick){kickStep(dt);return;}
  if(K.carry){carryPos();if(!(K.pickT>0)&&!(K.wipe>0)){let cl=null;for(const c of G.closets)if(!c.who&&dist(c,K)<46){cl=c;break;}if(cl){const c=K.carry;K.carry=null;K.closet=null;lockSurv(c,cl);K.wipe=1;K.state='patrol';}}return;}
- if(K.windup){K.windup.t-=dt;if(K.windup.t<=0){K.windup=null;K.lunge={t:0.32,a:K.look==null?K.face:K.look};K.slashT=0.45;K.slashA=K.lunge.a;sfx('lunge');}}
- else if(K.lunge){const L=K.lunge;L.t-=dt;L.a=K.look==null?K.face:K.look;let hitS=null;for(const s of S){if(!active(s)||s.hidden||s.vault)continue;const R=K.r+s.r+20,o=s.ph&&s.ph.find(q=>G.t-q[0]<=0.18);if(dist(K,s)<R||(o&&Math.hypot(K.x-o[1],K.y-o[2])<R)){hitS=s;break;}}
+ if(K.windup){K.windup.t-=dt;if(K.windup.t<=0){K.windup=null;K.lunge={t:0.4,a:K.look==null?K.face:K.look};K.slashT=0.45;K.slashA=K.lunge.a;sfx('lunge');}}
+ else if(K.lunge){const L=K.lunge;L.t-=dt;L.a=K.look==null?K.face:K.look;let hitS=null;for(const s of S){if(!active(s)||s.hidden||s.vault)continue;const R=K.r+s.r+28,o=s.ph&&s.ph.find(q=>G.t-q[0]<=0.18);if(dist(K,s)<R||(o&&Math.hypot(K.x-o[1],K.y-o[2])<R)){hitS=s;break;}}
   if(hitS){hit(hitS);return;}if(L.t<=0){K.lunge=null;K.wipe=0.9;K.cd=0.4;sfx('miss');}}
  // для жертв: погоня и потеря, как у бота — музыка, сердце и замедление в темноте работают как раньше
  let best=null,bd=1e9;for(const s of S){if(!killerSees(s))continue;const d=dist(K,s);if(d<bd){best=s;bd=d;}}
@@ -988,7 +988,7 @@ function update(dt){
  for(const c of G.closets)if(c.who&&c.p>0)c.p=Math.max(0,c.p-dt*0.05);
  for(const L of G.lockers){const tg=(L.openT>0||L.user)?1:0,d=tg-(L.door||0);const o0=L.door||0;L.door=o0+clamp(d,-dt/0.16,dt/0.22);L.user=0;if(nearCam(L.x,L.y,600)){const dv=Math.max(0.25,1-dist(L,camTarget())/600);if(o0<=0&&L.door>0&&G.t-(L.sT||-9)>0.7){L.sT=G.t;sfx(L.crate?'lidopen':'dooropen',dv);}if(o0>0&&L.door<=0&&G.t-(L.cT||-9)>0.7){L.cT=G.t;sfx('doorshut',dv);}}if(L.openT>0)L.openT-=dt;}for(const d of deco)if(d.shakeT>0)d.shakeT-=dt;
  fxTick(dt);
- if(G.marks.length&&G.t-G.marks[0].t>7)G.marks=G.marks.filter(m=>G.t-m.t<7);
+ if(G.marks.length&&G.t-G.marks[0].t>10)G.marks=G.marks.filter(m=>G.t-m.t<10);
  for(const q of G.drops){if(q.fall>0)q.fall-=dt;if(q.state==='breaking'){q.breakT-=dt;if(q.breakT<=0){q.state='broken';q.rect.open=true;boom(q.cx,q.cy,{r:80,col:'235,205,160',rays:8,shake:0.35,zoom:0.04,dur:0.35});floatTxt(q.cx,q.cy-50,'ТРЕСЬ!','#e8c890',26);fxAdd('chip',q.cx,q.cy,16,{v:200,r:5,vz:160,life:1.4});fxAdd('dust',q.cx,q.cy,8,{v:90,r:6,life:0.8,g:0});buildGrid();S.forEach(s=>s.repath=0);at(q.cx,q.cy);sfx('break');}}}
  for(const b of G.fly){b.t-=dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(hits(b.x,b.y,6))b.t=0;
   if(b.t<=0){b.done=true;noise(b.x,b.y,720);G.dropped.push({x:b.x-b.vx*dt,y:b.y-b.vy*dt});const d=dist(b,camTarget());sfx('thump',Math.max(0.2,1-d/700));}}
@@ -1776,6 +1776,10 @@ function hunterHUD(){const R='#d0503e',INK='#f4ead2',edge=(x,y,col,draw)=>{const
  if(K.blindT>0){ctx.fillStyle='rgba(255,252,235,'+Math.min(0.9,K.blindT*0.45).toFixed(2)+')';ctx.fillRect(0,0,VW,VH);}
  // шум за экраном — метка на краю
  for(const n of G.knL||[]){const k=(G.t-n.t)/3;ctx.globalAlpha=Math.max(0,1-k)*(0.6+0.4*Math.sin(G.t*12));edge(n.x,n.y,'rgba(170,30,22,.92)');ctx.globalAlpha=1;}
+ for(const g of G.gens)if(!g.done&&g.p>0.5)edge(g.x,g.y,'rgba(150,115,30,.92)');
+ // чутьё: жертва с включённым фонариком рядом, но за стеной — примерная сторона
+ for(const q of S){if(!active(q)||q.hidden||!q.flash||inBush(q))continue;const d=dist(K,q);if(d>300||d<60||hunterSees(q))continue;if(!q._ij||G.t>q._ijT){q._ij=(Math.random()-0.5)*1.05;q._ijT=G.t+2;}const a=Math.atan2(q.y-K.y,q.x-K.x)+q._ij,cx=(K.x-camX)*SC+VW/2,cy=(K.y-camY)*SC+VH/2-40*SC,r=Math.min(VW,VH)*0.32,pl=0.5+0.5*Math.sin(G.t*6);
+  ctx.save();ctx.translate(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.rotate(a);ctx.globalAlpha=(0.25+0.35*pl)*(1-d/300*0.5);ctx.fillStyle='#d0302a';ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-6,-10);ctx.lineTo(-2,0);ctx.lineTo(-6,10);ctx.closePath();ctx.fill();ctx.restore();ctx.globalAlpha=1;}
  // несёшь жертву — где ближайшая свободная кладовка
  if(K.carry){let b=null,bd=1e9;for(const c of G.closets){if(c.who)continue;const d=dist(c,K);if(d<bd){bd=d;b=c;}}if(b)edge(b.x,b.y,'rgba(110,70,40,.95)');}
  // кнопка действия: что сделает тап
@@ -1817,11 +1821,13 @@ function drawIndoor(T){const c=camTarget();if(!c||c===K)return;let b=null;for(co
   ctx.save();ctx.translate(w.x,cy);ctx.scale(1.25,0.8);const g=ctx.createRadialGradient(0,0,0,0,0,56);g.addColorStop(0,'rgba(255,40,24,'+(0.8*a).toFixed(3)+')');g.addColorStop(0.5,'rgba(255,40,24,'+(0.3*a).toFixed(3)+')');g.addColorStop(1,'rgba(255,40,24,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,56,0,7);ctx.fill();ctx.restore();}ctx.restore();}}
 // охотнику: следы бегущих жертв и места, где был шум
 function drawHunterWorld(T){if(!ME_K||!G.kmk)return;ctx.setTransform(T[0],0,0,T[3],T[4],T[5]);const t=G.t;
- if(G.kmk.length&&t-G.kmk[0].t>6)G.kmk=G.kmk.filter(m=>t-m.t<6);
- ctx.lineCap='round';for(const m of (K.local?G.marks:G.kmk)){if(t-m.t>6)continue;const a=1-(t-m.t)/6;if(offView(m.x,m.y,20))continue;ctx.strokeStyle=m.inj?'rgba(210,40,30,'+(0.85*a).toFixed(2)+')':'rgba(230,90,70,'+(0.55*a).toFixed(2)+')';ctx.lineWidth=2;
+ if(G.kmk.length&&t-G.kmk[0].t>10)G.kmk=G.kmk.filter(m=>t-m.t<10);
+ ctx.lineCap='round';for(const m of (K.local?G.marks:G.kmk)){if(t-m.t>10)continue;const a=1-(t-m.t)/10;if(offView(m.x,m.y,20))continue;ctx.strokeStyle=m.inj?'rgba(210,40,30,'+(0.85*a).toFixed(2)+')':'rgba(230,90,70,'+(0.55*a).toFixed(2)+')';ctx.lineWidth=2;
   const ca=Math.cos(m.a+1.2),sa=Math.sin(m.a+1.2);for(const o of[-4,0,4]){const ox=m.x+Math.cos(m.a)*o*0.6,oy=m.y+Math.sin(m.a)*o*0.6+o;ctx.beginPath();ctx.moveTo(ox-ca*5,oy-sa*5);ctx.lineTo(ox+ca*5,oy+sa*5);ctx.stroke();}
   if(m.inj){ctx.fillStyle='rgba(170,20,15,'+(0.8*a).toFixed(2)+')';ctx.beginPath();ctx.arc(m.x+3,m.y+4,2.2,0,7);ctx.fill();}}
  ctx.lineCap='butt';
+ // щитки, которые почти починили, охотник чует сквозь стены
+ for(const g of G.gens){if(g.done||!(g.p>0.5))continue;const pl=0.7+0.3*Math.sin(t*4+g.x);ctx.lineWidth=4;ctx.strokeStyle='rgba(240,200,90,'+(0.35*pl).toFixed(2)+')';ctx.beginPath();ctx.arc(g.x,g.y-14,30,0,7);ctx.stroke();ctx.strokeStyle='rgba(255,215,110,'+(0.9*pl).toFixed(2)+')';ctx.lineCap='round';ctx.beginPath();ctx.arc(g.x,g.y-14,30,-Math.PI/2,-Math.PI/2+g.p*Math.PI*2);ctx.stroke();ctx.lineCap='butt';}
  if(G.knL.length&&t-G.knL[0].t>3)G.knL=G.knL.filter(n=>t-n.t<3);
  for(const n of G.knL){const k=(t-n.t)/3;for(let r=0;r<2;r++){const q=(k*2+r*0.5)%1;ctx.strokeStyle='rgba(230,50,35,'+((1-q)*(1-k)*0.9).toFixed(2)+')';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y,14+q*70,0,7);ctx.stroke();}}}
 function draw(){
@@ -1926,8 +1932,8 @@ let ME_K=false;
 function hunterFrozen(){return K.wipe>0||K.stunT>0||!!K.kick||K.pickT>0;}
 function hunterMove(inp,dt){const gst=NET.role==='guest';if(gst){if(K.wipe>0)K.wipe-=dt;if(K.cd>0)K.cd-=dt;}if(K.lpause>0)K.lpause-=dt;const L=K.look==null?K.face:K.look;
  let sp=(inLight(K.x,K.y)?196:214);if(K.carry)sp=150*(1-0.35*(K.carry.wig||0));if(K.blindT>0)sp*=0.4;
- if(K.lw){const w=K.lw;w.t+=dt;if(gst){K.windup=w.t<0.24?{t:0.24-w.t}:null;K.lunge=w.t>=0.24&&w.t<0.56?{a:w.a,t:0.56-w.t}:null;}
-  if(w.t<0.24)moveAgent(K,Math.cos(w.a)*sp*0.45,Math.sin(w.a)*sp*0.45,dt);else if(w.t<0.56){moveAgent(K,Math.cos(w.a)*340,Math.sin(w.a)*340,dt);K.face=w.a;}else{K.lw=null;if(gst){K.windup=null;K.lunge=null;}K.lpause=0.3;}if(!gst&&!K.windup&&!K.lunge&&w.t>0.05)K.lw=null;}
+ if(K.lw){const w=K.lw;w.t+=dt;if(gst){K.windup=w.t<0.24?{t:0.24-w.t}:null;K.lunge=w.t>=0.24&&w.t<0.64?{a:w.a,t:0.64-w.t}:null;}
+  if(w.t<0.24)moveAgent(K,Math.cos(w.a)*sp*0.45,Math.sin(w.a)*sp*0.45,dt);else if(w.t<0.64){moveAgent(K,Math.cos(w.a)*340,Math.sin(w.a)*340,dt);K.face=w.a;}else{K.lw=null;if(gst){K.windup=null;K.lunge=null;}K.lpause=0.3;}if(!gst&&!K.windup&&!K.lunge&&w.t>0.05)K.lw=null;}
  else{if(gst){K.windup=null;K.lunge=null;}const m=Math.hypot(inp.x,inp.y);K.mvIn=m>=0.1;
   if(!hunterFrozen()&&!(K.lpause>0)&&m>=0.1){const k=Math.min(1,m);let v=inp.run?sp:sp*Math.max(0.45,k*0.6);if(K.blindT>0){const a=Math.sin(G.t*3)*0.9;inp={x:inp.x*Math.cos(a)-inp.y*Math.sin(a),y:inp.x*Math.sin(a)+inp.y*Math.cos(a)};}
    moveAgent(K,inp.x/m*v,inp.y/m*v,dt);K.face=lerpAng(K.face,Math.atan2(inp.y,inp.x),Math.min(1,dt*12));}
@@ -1939,7 +1945,7 @@ function hunterMove(inp,dt){const gst=NET.role==='guest';if(gst){if(K.wipe>0)K.w
  // первая подсказка
  if(!(G.intro>0)&&!G.hkTip){G.hkTip=1;G.toast={t:isTouch?'Ты — охотник. Тап — удар. У шкафчика, щитка или капкана тап делает действие':'Ты — охотник. Пробел — удар. У шкафчика, щитка или капкана Пробел делает действие',ttl:6};}}
 // что сделает тап: удар, обыск шкафчика, порча щитка, капкан, сломать щит
-function hunterSees(s){if(!active(s)||s.hidden)return false;if(s.revealT>0)return true;const d=dist(K,s);if(d>760||!los(K.x,K.y,s.x,s.y))return false;if(d<110)return true;
+function hunterSees(s){if(!active(s)||s.hidden)return false;if(s.revealT>0)return true;const d=dist(K,s);if(d>760||!los(K.x,K.y,s.x,s.y))return false;if(d<160)return true;
  if(inBush(s)&&!s.running)return d<45;if(s.flash&&d<760)return true;if(inLight(s.x,s.y)&&d<620)return true;
  const lk=K.look==null?K.face:K.look,ad=Math.abs(((Math.atan2(s.y-K.y,s.x-K.x)-lk+Math.PI*3)%(Math.PI*2))-Math.PI);return ad<0.62&&d<rayLen(K.x,K.y,Math.atan2(s.y-K.y,s.x-K.x),370);}
 function hunterCtx(){if(!G||K.carry)return null;
@@ -1949,7 +1955,9 @@ function hunterCtx(){if(!G||K.carry)return null;
  i=G.gens.findIndex(g=>!g.done&&g.p>0.02&&!g.regress&&dist(g,K)<60);if(i>=0)return{k:'gen',i,o:G.gens[i]};
  i=G.traps.findIndex(q=>q.state==='sprung'&&Math.hypot(q.x-K.x,q.y-K.y)<46);if(i>=0)return{k:'trap',i,o:G.traps[i]};
  return{k:'atk'};}
-function hunterAct(){if(!G||!running||G.intro>0||G.over)return;if(K.lw||hunterFrozen()||K.blindT>0)return;const c=hunterCtx();if(!c)return;
+function hunterAim(){const a0=K.look==null?K.face:K.look;let best=null,bs=1e9;for(const q of S){if(!active(q)||q.hidden||!hunterSees(q))continue;const d=dist(K,q);if(d>210)continue;const ad=Math.abs(((Math.atan2(q.y-K.y,q.x-K.x)-a0+Math.PI*3)%(Math.PI*2))-Math.PI);if(ad>0.7)continue;const sc=d+ad*120;if(sc<bs){bs=sc;best=q;}}
+ if(best){const a=Math.atan2(best.y-K.y,best.x-K.x);K.look=a;K.face=a;return a;}return a0;}
+function hunterAct(){if(!G||!running||G.intro>0||G.over)return;if(K.lw||hunterFrozen()||K.blindT>0)return;const c=hunterCtx();if(!c)return;if(c.k==='atk'&&!(K.cd>0))hunterAim();
  if(NET.role!=='guest'){killerAct({k2:c.k,i:c.i||0});if(c.k==='atk'&&K.windup){K.lw={t:0,a:K.look==null?K.face:K.look};vib(15);}else vib(10);return;}
  if(c.k==='atk'){if(K.cd>0)return;const a=K.look==null?K.face:K.look;K.lw={t:0,a};K.cd=0.9;vib(15);}
  else{K.wipe=c.k==='gen'?1.5:c.k==='trap'?1.3:c.k==='drop'?2.2:0.8;vib(10);}
